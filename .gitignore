@@ -1,0 +1,22 @@
+# Environment files with sensitive credentials
+.env
+.env.local
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Docker persistent runtime data
+data/
+keys/
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
