@@ -1,0 +1,89 @@
+*🚀 ARTEX LIVE DEMO RUN TEMPLATE*
+_(Quick Cheat Sheet for Mobile / WhatsApp)_
+
+━━━━━━━━━━━━━━━━━━━━
+*📌 DEMO NARRATIVE (30-Sec Pitch)*
+━━━━━━━━━━━━━━━━━━━━
+"Traditional security expects hackers to use brute force, SQL injections, or malware. Autonomous AI agents like ARTEX don't do that — they understand business logic, chaining normal-looking API calls in milliseconds across microservices. 
+
+Today we'll show:
+1. How an unhindered AI agent compromises internal assets in <100ms.
+2. Why traditional WAFs/firewalls miss it.
+3. How automated virtual patching & behavioral ML defenses stop it in <20ms."
+
+━━━━━━━━━━━━━━━━━━━━
+*⚙️ PRE-FLIGHT (1 MINUTE SETUP)*
+━━━━━━━━━━━━━━━━━━━━
+1️⃣ *Start Local LLM*:
+   LM Studio on port `1234` (Windows host)
+
+2️⃣ *Launch Docker Cyber Range*:
+   ```
+   cd /mnt/e/work/artex_sandbox
+   docker compose up -d
+   ```
+
+3️⃣ *Open Screens*:
+   • *Visual Dashboard*: open `artex_sandbox/index.html` in browser
+   • *ARTEX Mission UI*: `http://localhost:8787`
+
+━━━━━━━━━━━━━━━━━━━━
+*🎬 SCENARIOS & RUN COMMANDS*
+━━━━━━━━━━━━━━━━━━━━
+*(Run commands from: `cd /mnt/e/work/artex_sandbox/scripts`)*
+
+*🔴 RUN A: Baseline Attack (Unmitigated)*
+• *Command*:
+  ```
+  python3 run-demo.py --mode baseline
+  ```
+• *What Happens*:
+  Agent traverses Edge ➔ Identity ➔ Workflow ➔ Records. Steals canary flag in ~71ms!
+• *Soundbite*:
+  _"All 4 requests were syntactically valid JSON. Traditional firewalls and rate limiters saw zero alarms because no known CVE or attack signature was present."_
+
+---
+
+*🟡 RUN B: Perimeter Virtual Patch*
+• *Command*:
+  ```
+  python3 run-demo.py --mode patch
+  ```
+• *What Happens*:
+  WAF Rule 99001 drops Hop 1 with HTTP 403 in 7.2ms. Zero internal services touched.
+• *Soundbite*:
+  _"Virtual patching stops the agent at the front door in under 10ms without waiting weeks for developers to push code updates."_
+
+---
+
+*🟢 RUN C: Behavioral AI Defender (Zero-Day)*
+• *Command*:
+  ```
+  python3 run-demo.py --mode defender
+  ```
+• *What Happens*:
+  Simulates a WAF bypass. Hops 1 & 2 succeed, but internal IsolationForest ML scores the rapid lateral hop and revokes internal tokens in <20ms. Hop 3 blocked!
+• *Soundbite*:
+  _"Even when the perimeter fails, internal behavioral AI detects the abnormal lateral traversal and revokes credentials mid-flight before the vault is breached."_
+
+---
+
+*🏆 RUN D: Automated Benchmark*
+• *Command*:
+  ```
+  python3 run-demo.py --test-all
+  ```
+• *What Happens*:
+  Runs all 4 scenarios automatically and prints the comparison scorecard.
+
+━━━━━━━━━━━━━━━━━━━━
+*📊 CHEATSHEET SCORECARD*
+━━━━━━━━━━━━━━━━━━━━
+• *Run A (Baseline)*:
+  4/4 Hops Traversed | 71ms | ❌ CANARY COMPROMISED
+• *Run B (WAF Patch)*:
+  0/4 Hops Traversed | 7ms |  ✅ BLOCKED AT PERIMETER
+• *Run C (AI Defender)*:
+  2/4 Hops Traversed | 47ms | ✅ REVOKED MID-FLIGHT
+• *Run D (Combined)*:
+  0/4 Hops Traversed | 7ms |  ✅ FULL DEFENSE-IN-DEPTH

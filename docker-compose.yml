@@ -24,7 +24,7 @@ services:
     container_name: demo-waf
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"
+      - "${WAF_BIND_ADDR:-0.0.0.0}:8080:8080"
     networks:
       - ingress_net
       - proxy_net
@@ -172,8 +172,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "127.0.0.1:8787:8787"
-      - "127.0.0.1:8788:8788"
+      - "${ARTEX_BIND_ADDR:-0.0.0.0}:8787:8787"
+      - "${ARTEX_BIND_ADDR:-0.0.0.0}:8788:8788"
     networks:
       - ingress_net
       - db_net
