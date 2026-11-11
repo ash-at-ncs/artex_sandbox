@@ -1158,16 +1158,21 @@ function triggerNodeHit(node, isExfil = false, customKev = null) {
   node.hit = true;
   runStats.hits++;
 
+  const activeKev = customKev || node.kev;
+
   if (node.el) {
     node.el.classList.add('hit');
     if (isExfil || node.isLake || node.isDb) {
       node.el.classList.add('breach-target');
       runStats.lakesBreached++;
-      const kevEl = node.el.querySelector('.node-kev');
-      if (kevEl) {
-        const vulnText = customKev ? `${customKev.id} · ${customKev.title}` : `${node.kev.id} · ${node.kev.title}`;
-        kevEl.innerHTML = `<span class="cve">CANARY_TOKEN EXFILTRATED</span><span class="vuln-title">${vulnText}</span>`;
-      }
+    }
+
+    const kevEl = node.el.querySelector('.node-kev');
+    if (kevEl) {
+      kevEl.innerHTML = `
+        <span class="cve">${activeKev.id}</span>
+        <span class="vuln-title">${activeKev.title}</span>
+      `;
     }
 
     const burst = document.createElement('div');
@@ -1388,7 +1393,7 @@ function finalizeSimulation() {
   const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
   if (runStats.lakesBreached > 0) {
     runHud.className = 'breached';
-    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} KEVs EXPLOITED · ${runStats.blocks} CONTAINED · DATABASE BREACH DETECTED [CANARY_ALPHA_7739]`;
+    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} KEVs EXPLOITED · ${runStats.blocks} CONTAINED · DATABASE CLUSTER COMPROMISED`;
   } else {
     runHud.className = 'contained';
     runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.blocks} BLOCKED AT BOUNDARY · ZERO-TRUST ARCHITECTURE PROTECTED DATABASES`;
