@@ -37,6 +37,8 @@ Once launched, navigate to:
 
 ## Interactive Wire Diagram Simulation (`wire.html`)
 
+![ARTEX Wire Diagram Simulation Demo](assets/wire_simulation_demo.gif)
+
 A full-screen, GPU-accelerated cyber wire diagram built with pure HTML5, SVG straight circuit traces, and CSS alpha-masking across 30 enterprise infrastructure icons.
 
 ### Key Capabilities
