@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ARTEX | Wire Diagram Simulation v2.1.0</title>
+<title>ARTEX | Wire Diagram Simulation v2.2.0</title>
 <style>
   :root {
     --bg: #000000;
@@ -515,7 +515,7 @@
     </div>
   </div>
 
-  <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.1.0</span></a>
+  <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.2.0</span></a>
 
   <!-- Fullscreen SVG for straight wires & pulses -->
   <svg id="wire-svg"></svg>
@@ -886,6 +886,7 @@ let currentNodes = [];
 let currentWires = [];
 let savedAttackOrigins = [];
 let activeTimeouts = [];
+let usedKevIdsPerLayer = [[], [], [], []];
 let isSimulating = false;
 let runCount = 0;
 let runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
@@ -1163,15 +1164,43 @@ function resetInfraVisuals() {
   runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
   inFlightOperations = 0;
   layerHits = [0, 0, 0, 0];
+  usedKevIdsPerLayer = [[], [], [], []];
   isSimulating = false;
 }
 
-function triggerNodeHit(node, isExfil = false, customKev = null) {
+/**
+ * Returns a distinct CISA KEV for the given node so multiple compromises
+ * in the same layer never repeat the same vulnerability.
+ */
+function getDistinctKevForNode(node) {
+  const layerIdx = node.layerIdx;
+  const pool = LAYER_KEVS[layerIdx] || [];
+  
+  // Available KEVs in this layer that haven't been displayed on another hit node yet
+  const unusedInLayer = pool.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
+  
+  let chosen = node.kev;
+  if (usedKevIdsPerLayer[layerIdx].includes(chosen.id)) {
+    if (unusedInLayer.length > 0) {
+      chosen = unusedInLayer[0];
+    } else {
+      const others = pool.filter(k => k.id !== node.kev.id);
+      chosen = others.length > 0 ? others[0] : node.kev;
+    }
+  }
+  
+  usedKevIdsPerLayer[layerIdx].push(chosen.id);
+  return chosen;
+}
+
+function triggerNodeHit(node, isExfil = false) {
   if (node.hit || node.defended) return;
   node.hit = true;
   runStats.hits++;
 
-  const activeKev = customKev || node.kev;
+  // Ensure each hacked node in the layer displays a distinct CISA KEV
+  const activeKev = getDistinctKevForNode(node);
+  node.activeKev = activeKev;
 
   if (node.el) {
     node.el.classList.add('hit');
@@ -1347,7 +1376,7 @@ function traverseFromNode(node, depth) {
             const isFinalLake = target.layerIdx === 3;
             triggerNodeHit(target, isFinalLake);
 
-            // Multi-instance target group compromise: 1 or 2 get hacked by the same unmitigated vuln
+            // Multi-instance target group compromise: 1 or 2 get hacked by distinct vulns
             if (target.groupId && layerHits[depth] < 3 && Math.random() < 0.45) {
               const siblings = currentNodes.filter(n => n.groupId === target.groupId && n.id !== target.id && !n.hit && !n.defended);
               if (siblings.length > 0) {
@@ -1355,14 +1384,14 @@ function traverseFromNode(node, depth) {
                 safeTimeout(() => {
                   if (layerHits[depth] < 3 && !siblingVic.hit) {
                     layerHits[depth]++;
-                    triggerNodeHit(siblingVic, target.isLake, target.kev);
+                    triggerNodeHit(siblingVic, target.isLake);
                   }
                 }, 220);
               }
             }
 
             // Backend Clustered Database Lateral Compromise:
-            // "at the backend there might be a few databases clustered and 1 or 2 get hacked by a given vuln, up to 3."
+            // "when it hacks more than 1, pick a different KEV, we have a few per layer"
             if (isFinalLake && target.isDb) {
               const clusterPeers = currentNodes.filter(n => 
                 n.layerIdx === 3 && n.clusterName === target.clusterName && n.id !== target.id && !n.hit && !n.defended
@@ -1374,7 +1403,7 @@ function traverseFromNode(node, depth) {
                   safeTimeout(() => {
                     if (layerHits[3] < 3) {
                       layerHits[3]++;
-                      triggerNodeHit(vic, true, target.kev);
+                      triggerNodeHit(vic, true);
                     }
                   }, 260 + vIdx * 180);
                 });
