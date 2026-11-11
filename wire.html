@@ -49,20 +49,20 @@
     background-image: 
       linear-gradient(rgba(0, 255, 119, 0.02) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 255, 119, 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-size: 50px 50px;
     pointer-events: none;
   }
 
-  /* TOP HEADER - Strictly minimal: NEW RUN in turquoise with live outcome HUD */
+  /* TOP HEADER - Minimalist: ONLY "NEW RUN" in turquoise with live outcome HUD */
   .top-bar {
     position: absolute;
-    top: 18px;
+    top: 16px;
     left: 0;
     right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     z-index: 1000;
     pointer-events: none;
   }
@@ -72,10 +72,10 @@
     background: rgba(0, 30, 36, 0.85);
     border: 1.5px solid var(--turquoise);
     color: var(--turquoise);
-    padding: 10px 32px;
-    font-size: 13px;
+    padding: 9px 30px;
+    font-size: 12.5px;
     font-weight: 800;
-    letter-spacing: 0.24em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     border-radius: 4px;
     cursor: pointer;
@@ -85,7 +85,7 @@
     outline: none;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
   }
 
   #new-run-btn:hover {
@@ -100,7 +100,7 @@
   }
 
   #new-run-btn .run-icon {
-    font-size: 14px;
+    font-size: 13px;
     display: inline-block;
     transition: transform 0.4s ease;
   }
@@ -111,11 +111,11 @@
 
   /* Live Outcome HUD under NEW RUN button */
   #run-hud {
-    font-size: 10.5px;
+    font-size: 10px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--turquoise);
-    background: rgba(0, 16, 22, 0.75);
+    background: rgba(0, 16, 22, 0.8);
     border: 1px solid rgba(0, 240, 255, 0.25);
     padding: 3px 14px;
     border-radius: 3px;
@@ -127,27 +127,27 @@
     color: var(--red);
     border-color: rgba(255, 34, 68, 0.4);
     text-shadow: 0 0 8px rgba(255, 34, 68, 0.6);
-    background: rgba(26, 4, 8, 0.8);
+    background: rgba(26, 4, 8, 0.85);
   }
   #run-hud.contained {
     color: #65d7a5;
     border-color: rgba(101, 215, 165, 0.4);
     text-shadow: 0 0 8px rgba(101, 215, 165, 0.6);
-    background: rgba(4, 20, 14, 0.8);
+    background: rgba(4, 20, 14, 0.85);
   }
 
   /* Discreet nav link to return to table view */
   .back-link {
     position: absolute;
-    top: 22px;
-    right: 28px;
+    top: 20px;
+    right: 26px;
     pointer-events: auto;
     color: rgba(255, 255, 255, 0.35);
-    font-size: 11px;
+    font-size: 10.5px;
     letter-spacing: 0.1em;
     text-decoration: none;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 6px 12px;
+    padding: 5px 11px;
     border-radius: 3px;
     transition: all 0.2s;
     z-index: 1000;
@@ -171,22 +171,22 @@
   .wire {
     fill: none;
     stroke: var(--green-wire);
-    stroke-width: 1.5;
+    stroke-width: 1.25;
     stroke-linecap: round;
-    transition: stroke 0.5s ease, stroke-width 0.4s ease, filter 0.4s ease, stroke-opacity 0.5s ease;
+    transition: stroke 0.4s ease, stroke-width 0.3s ease, filter 0.3s ease, stroke-opacity 0.4s ease;
   }
 
   .wire.active-wire {
     stroke: var(--green);
-    stroke-opacity: 0.7;
-    stroke-width: 2;
+    stroke-opacity: 0.75;
+    stroke-width: 1.8;
     filter: drop-shadow(0 0 4px var(--green));
   }
 
   .wire.hit-wire {
     stroke: var(--red);
     stroke-opacity: 0.95;
-    stroke-width: 2.5;
+    stroke-width: 2.2;
     filter: drop-shadow(0 0 6px var(--red-glow));
     stroke-dasharray: none;
   }
@@ -207,7 +207,7 @@
     pointer-events: none;
   }
 
-  /* Individual Node Container - Largish Icons */
+  /* Smaller, sleek node items */
   .node {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -217,19 +217,19 @@
     justify-content: center;
     pointer-events: auto;
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .node:hover {
-    transform: translate(-50%, -50%) scale(1.12);
+    transform: translate(-50%, -50%) scale(1.15);
     z-index: 100;
   }
 
-  /* Node Icon Box - Largish */
+  /* Node Icon Box - Smaller */
   .node-icon-wrapper {
     position: relative;
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -238,7 +238,7 @@
   /* Ambient glowing ring around icon */
   .node-halo {
     position: absolute;
-    inset: -6px;
+    inset: -4px;
     border-radius: 50%;
     border: 1px dashed var(--green);
     opacity: 0.35;
@@ -251,10 +251,10 @@
     to { transform: rotate(360deg); }
   }
 
-  /* The Icon itself using pure CSS Mask: white becomes transparent, icon glows in green */
+  /* The Icon itself using pure CSS Mask: smaller, crisp, transparent */
   .node-icon {
-    width: 38px;
-    height: 38px;
+    width: 26px;
+    height: 26px;
     background-color: var(--green);
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
@@ -262,41 +262,41 @@
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
-    filter: drop-shadow(0 0 7px var(--green-glow));
+    filter: drop-shadow(0 0 5px var(--green-glow));
     transition: background-color 0.4s ease, filter 0.4s ease, transform 0.3s ease;
   }
 
   /* Node Label */
   .node-label {
-    margin-top: 6px;
-    font-size: 10px;
+    margin-top: 4px;
+    font-size: 8px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: var(--green);
-    text-shadow: 0 0 6px var(--green-glow);
+    text-shadow: 0 0 5px var(--green-glow);
     white-space: nowrap;
     text-align: center;
     transition: color 0.4s ease, text-shadow 0.4s ease;
   }
 
-  /* KEV Title underneath in RED */
+  /* KEV Title underneath in RED (hidden initially, displays on hit) */
   .node-kev {
-    margin-top: 4px;
-    font-size: 9.5px;
+    margin-top: 3px;
+    font-size: 7.5px;
     font-weight: 700;
     color: var(--red);
-    text-shadow: 0 0 8px var(--red-glow);
+    text-shadow: 0 0 7px var(--red-glow);
     white-space: nowrap;
     text-align: center;
-    background: rgba(45, 6, 12, 0.85);
+    background: rgba(45, 6, 12, 0.88);
     border: 1px solid rgba(255, 34, 68, 0.55);
     border-radius: 3px;
-    padding: 2px 6px;
+    padding: 2px 5px;
     opacity: 0;
-    transform: translateY(-4px) scale(0.9);
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-3px) scale(0.9);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
-    box-shadow: 0 0 12px rgba(255, 34, 68, 0.3);
+    box-shadow: 0 0 10px rgba(255, 34, 68, 0.3);
   }
 
   .node-kev .cve {
@@ -306,15 +306,15 @@
 
   .node-kev .vuln-title {
     display: block;
-    font-size: 8.5px;
+    font-size: 7px;
     opacity: 0.9;
     font-weight: 500;
   }
 
-  /* HIT STATE: Lit in RED, Red Glow */
+  /* HIT STATE: Lit in RED */
   .node.hit .node-icon {
     background-color: var(--red);
-    filter: drop-shadow(0 0 14px var(--red-glow)) drop-shadow(0 0 24px var(--red));
+    filter: drop-shadow(0 0 12px var(--red-glow)) drop-shadow(0 0 20px var(--red));
     transform: scale(1.1);
   }
 
@@ -322,7 +322,7 @@
     border-color: var(--red);
     border-style: solid;
     opacity: 0.85;
-    box-shadow: 0 0 15px var(--red-glow);
+    box-shadow: 0 0 12px var(--red-glow);
     animation: hitPulse 1.2s ease-out infinite alternate;
   }
 
@@ -339,14 +339,14 @@
   /* DEFENDED / BLOCKED STATE */
   .node.defended .node-icon {
     background-color: #f3bd64;
-    filter: drop-shadow(0 0 12px rgba(243, 189, 100, 0.8));
+    filter: drop-shadow(0 0 10px rgba(243, 189, 100, 0.8));
     transform: scale(1.05);
   }
   .node.defended .node-halo {
     border-color: #f3bd64;
     border-style: double;
     opacity: 0.85;
-    box-shadow: 0 0 12px rgba(243, 189, 100, 0.5);
+    box-shadow: 0 0 10px rgba(243, 189, 100, 0.5);
   }
   .node.defended .node-label {
     color: #f3bd64;
@@ -359,24 +359,24 @@
     border-color: rgba(243, 189, 100, 0.6);
     background: rgba(30, 22, 6, 0.88);
     text-shadow: 0 0 8px rgba(243, 189, 100, 0.5);
-    box-shadow: 0 0 12px rgba(243, 189, 100, 0.3);
+    box-shadow: 0 0 10px rgba(243, 189, 100, 0.3);
   }
 
-  /* CROWN JEWEL DATA LAKE BREACH ALARM */
+  /* DATABASE CLUSTER BREACH TARGET */
   .node.breach-target .node-icon {
     background-color: #ff003c;
-    filter: drop-shadow(0 0 20px #ff003c) drop-shadow(0 0 35px #ff003c);
+    filter: drop-shadow(0 0 16px #ff003c) drop-shadow(0 0 28px #ff003c);
     animation: breachShake 0.4s ease infinite alternate;
   }
   .node.breach-target .node-kev {
     border-color: #ff003c;
     background: rgba(50, 0, 12, 0.95);
-    box-shadow: 0 0 20px rgba(255, 0, 60, 0.7);
+    box-shadow: 0 0 16px rgba(255, 0, 60, 0.7);
   }
 
   @keyframes breachShake {
-    0% { transform: scale(1.15) rotate(-2deg); }
-    100% { transform: scale(1.18) rotate(2deg); }
+    0% { transform: scale(1.12) rotate(-2deg); }
+    100% { transform: scale(1.15) rotate(2deg); }
   }
 
   .wire.defended-wire {
@@ -387,18 +387,18 @@
 
   @keyframes hitPulse {
     0% { transform: scale(1); opacity: 0.8; }
-    100% { transform: scale(1.25); opacity: 0.3; }
+    100% { transform: scale(1.22); opacity: 0.3; }
   }
 
   /* Flash impact burst when hit */
   .impact-burst {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     border: 2px solid var(--red);
     pointer-events: none;
-    animation: burstExpand 0.7s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+    animation: burstExpand 0.65s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
   }
 
   @keyframes burstExpand {
@@ -423,7 +423,7 @@
 
   <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗</a>
 
-  <!-- Fullscreen SVG for wires & pulses -->
+  <!-- Fullscreen SVG for straight wires & pulses -->
   <svg id="wire-svg"></svg>
 
   <!-- HTML nodes layer for GPU accelerated icon masking and text -->
@@ -436,7 +436,7 @@ const ICON_BASE = 'assets/diagram-icons/transparent/';
 
 // Ground-truth CISA KEV mappings strictly partitioned by architecture layer
 const LAYER_KEVS = [
-  // Layer 0: Perimeter & Cloud Ingress
+  // Layer 0: Perimeter & Cloud Ingress (T1190)
   [
     { id: 'CVE-2024-4577', title: 'PHP CGI Arg Injection RCE', tech: 'T1190' },
     { id: 'CVE-2023-46805', title: 'Ivanti Connect Secure Auth Bypass', tech: 'T1190' },
@@ -445,7 +445,7 @@ const LAYER_KEVS = [
     { id: 'CVE-2023-20198', title: 'Cisco IOS XE Priv Escalation', tech: 'T1068' },
     { id: 'CVE-2024-21887', title: 'Ivanti Connect Policy Injection', tech: 'T1059' }
   ],
-  // Layer 1: API Gateways & Access Control
+  // Layer 1: API Gateways & Access Control (T1068, T1552)
   [
     { id: 'CVE-2023-22515', title: 'Confluence Broken Access Control', tech: 'T1068' },
     { id: 'CVE-2024-27198', title: 'TeamCity Admin Token Minting', tech: 'T1552' },
@@ -454,7 +454,7 @@ const LAYER_KEVS = [
     { id: 'CVE-2024-1709', title: 'ScreenConnect Auth Bypass', tech: 'T1068' },
     { id: 'CVE-2021-26855', title: 'ProxyLogon Exchange SSRF', tech: 'T1190' }
   ],
-  // Layer 2: Microservices Mesh & Applications
+  // Layer 2: Microservices Mesh & Applications (T1059, T1210)
   [
     { id: 'CVE-2021-44228', title: 'Log4Shell JNDI Remote Code Execution', tech: 'T1059' },
     { id: 'CVE-2023-22527', title: 'Confluence OGNL Template Injection', tech: 'T1059' },
@@ -463,23 +463,23 @@ const LAYER_KEVS = [
     { id: 'CVE-2023-2868', title: 'Barracuda ESG Command Injection', tech: 'T1059' },
     { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' }
   ],
-  // Layer 3: Data Lakes & Clustered Databases
+  // Layer 3: Backend Clustered Databases & Repositories (T1041, T1003)
   [
     { id: 'CVE-2023-34362', title: 'MOVEit Transfer SQLi Exfiltration', tech: 'T1041' },
-    { id: 'CVE-2023-27350', title: 'PaperCut Setup Wizard Database Dump', tech: 'T1041' },
+    { id: 'CVE-2023-27350', title: 'PaperCut Setup Wizard DB Dump', tech: 'T1041' },
     { id: 'CVE-2020-1472', title: 'Zerologon Cryptographic Hash Dump', tech: 'T1003' },
     { id: 'CVE-2023-36884', title: 'Office HTML Document Exfiltration', tech: 'T1041' }
   ]
 ];
 
-// Architectural Layer Definitions: Backend Clustered Databases
+// Architectural Layer Definitions: Compact, more numerous icons with clustered backend databases
 const LAYER_CONFIG = [
   {
     name: '01 / Cloud Ingress',
     xBand: [0.08, 0.22],
     clusters: [
       {
-        name: 'AWS Ingress',
+        name: 'AWS Cloud Perimeter',
         nodes: [
           { id: 'aws-cloud', label: 'AWS Public Cloud', icon: 'public-cloud.png' },
           { id: 'aws-infra', label: 'AWS Infra Mesh', icon: 'cloud-infrastructure.png' },
@@ -554,7 +554,7 @@ const LAYER_CONFIG = [
         ]
       },
       {
-        name: 'AI & Operations',
+        name: 'AI & Intelligence',
         nodes: [
           { id: 'ai-core', label: 'Predictive AI Core', icon: 'ai.png' },
           { id: 'iot-hub', label: 'Telemetry IoT Ingestion', icon: 'iot.png' },
@@ -564,11 +564,11 @@ const LAYER_CONFIG = [
     ]
   },
   {
-    name: '04 / Backend Databases',
+    name: '04 / Backend Clustered Databases',
     xBand: [0.78, 0.92],
     clusters: [
       {
-        name: 'Database Cluster: Customer',
+        name: 'Database Cluster: Customer Records',
         nodes: [
           { id: 'lake-cust', label: 'Customer Lake S3', icon: 'data.png', isLake: true, isDb: true },
           { id: 'db-rds', label: 'Customer SQL RDS', icon: 'server-infrastructure.png', isLake: true, isDb: true },
@@ -576,7 +576,7 @@ const LAYER_CONFIG = [
         ]
       },
       {
-        name: 'Database Cluster: Analytics',
+        name: 'Database Cluster: Analytics & Vaults',
         nodes: [
           { id: 'lake-ops', label: 'Operational Analytics', icon: 'data.png', isLake: true, isDb: true },
           { id: 'nosql-doc', label: 'NoSQL Document Store', icon: 'server-infrastructure.png', isLake: true, isDb: true },
@@ -606,7 +606,8 @@ const newRunBtn = document.getElementById('new-run-btn');
 const runHud = document.getElementById('run-hud');
 
 /**
- * Organic layout with curved lines and largish icons (Commit 1 version)
+ * Organically position all objects across the screen and cluster them neatly.
+ * Nodes are smaller, more numerous, and neatly grouped.
  */
 function layoutGraph() {
   const w = window.innerWidth;
@@ -624,17 +625,18 @@ function layoutGraph() {
     let kevIdx = 0;
 
     layer.clusters.forEach((cluster, clusterIdx) => {
-      const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.04, h * 0.04);
-      const clusterCenterX = w * (layer.xBand[0] + (layer.xBand[1] - layer.xBand[0]) * 0.5) + rand(-w * 0.025, w * 0.025);
+      const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.03, h * 0.03);
+      const clusterCenterX = w * (layer.xBand[0] + (layer.xBand[1] - layer.xBand[0]) * 0.5) + rand(-w * 0.02, w * 0.02);
 
       const numNodes = cluster.nodes.length;
       cluster.nodes.forEach((rawNode, nodeIdx) => {
-        const angle = (nodeIdx / numNodes) * Math.PI * 2 + rand(-0.35, 0.35);
-        const radiusX = rand(w * 0.025, w * 0.065);
-        const radiusY = rand(h * 0.045, clusterHeight * 0.42);
+        // Neatly grouped compact cluster layout
+        const angle = (nodeIdx / numNodes) * Math.PI * 2 + rand(-0.2, 0.2);
+        const radiusX = rand(22, 36);
+        const radiusY = rand(18, 30);
 
-        const nx = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(angle) * radiusX + rand(-15, 15)));
-        const ny = Math.max(h * 0.11, Math.min(h * 0.90, clusterCenterY + Math.sin(angle) * radiusY + rand(-15, 15)));
+        const nx = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(angle) * radiusX));
+        const ny = Math.max(h * 0.11, Math.min(h * 0.90, clusterCenterY + Math.sin(angle) * radiusY));
 
         const kev = layerKevPool[kevIdx % layerKevPool.length];
         kevIdx++;
@@ -680,7 +682,7 @@ function layoutGraph() {
     }
   });
 
-  // Ensure every node has ingress
+  // Ensure every node has ingress connection
   currentNodes.forEach(target => {
     if (target.layerIdx > 0) {
       const hasUpstream = currentWires.some(w => w.target.id === target.id);
@@ -697,7 +699,7 @@ function layoutGraph() {
     }
   });
 
-  // Render DOM Nodes with Largish Icons
+  // Render DOM Nodes with smaller icons
   currentNodes.forEach(node => {
     const el = document.createElement('div');
     el.className = 'node';
@@ -728,19 +730,14 @@ function layoutGraph() {
 }
 
 /**
- * Curved lines between clusters (Commit 1 version)
+ * Straight circuit lines between clusters (Commit 2 version)
  */
 function createWire(source, target) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('class', 'wire');
 
-  const dx = target.x - source.x;
-  const p1x = source.x + dx * 0.5 + rand(-15, 15);
-  const p1y = source.y + rand(-10, 10);
-  const p2x = source.x + dx * 0.5 + rand(-15, 15);
-  const p2y = target.y + rand(-10, 10);
-
-  const d = `M ${source.x} ${source.y} C ${p1x} ${p1y}, ${p2x} ${p2y}, ${target.x} ${target.y}`;
+  // Straight line connection
+  const d = `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
   path.setAttribute('d', d);
 
   svg.appendChild(path);
@@ -801,7 +798,7 @@ function triggerNodeDefense(node, wire) {
 
 function animateWirePulse(wire, onComplete) {
   const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  pulse.setAttribute('r', '4');
+  pulse.setAttribute('r', '3.5');
   pulse.setAttribute('class', 'wire-packet');
   svg.appendChild(pulse);
 
@@ -809,7 +806,7 @@ function animateWirePulse(wire, onComplete) {
 
   const pathEl = wire.path;
   const totalLength = pathEl.getTotalLength();
-  const duration = rand(400, 750);
+  const duration = rand(380, 700);
   const startTime = performance.now();
 
   function step(time) {
@@ -844,7 +841,7 @@ function startSimulation() {
 
   layoutGraph();
 
-  // 1-2 ingress nodes
+  // 1-2 ingress nodes initiate attack
   const ingressNodes = currentNodes.filter(n => n.layerIdx === 0);
   const startCount = randInt(1, 2);
   const startNodes = shuffle(ingressNodes).slice(0, startCount);
@@ -870,6 +867,7 @@ function traverseFromNode(node, depth) {
   const remainingBudget = 3 - layerHits[depth];
   if (remainingBudget <= 0) return;
 
+  // 1-2 chaining per step, capped to max 3 hits per layer
   const chainCount = Math.min(remainingBudget, randInt(1, 2));
   const selectedWires = shuffle(outgoingWires).slice(0, chainCount);
 
@@ -897,7 +895,7 @@ function traverseFromNode(node, depth) {
             const isFinalLake = target.layerIdx === 3;
             triggerNodeHit(target, isFinalLake);
 
-            // Backend Database Clustered Compromise:
+            // Backend Clustered Database Lateral Compromise:
             // "at the backend there might be a few databases clustered and 1 or 2 get hacked by a given vuln, up to 3."
             if (isFinalLake && target.isDb) {
               const clusterPeers = currentNodes.filter(n => 
