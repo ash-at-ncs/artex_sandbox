@@ -581,7 +581,7 @@ const KEV_MITIGATION_RULES = {
     ml:  { mitigates: false, reason: 'Perimeter auth bypass occurs before internal ML baseline can flag session' }
   },
   'CVE-2024-3400': {
-    waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF signature inspects & filters GlobalProtect HTTP telemetry header payload' },
+    waf: { mitigates: false, reason: 'WAF signature bypassed via encoded session cookie directory traversal' },
     ml:  { mitigates: false, reason: 'Edge firewall OS injection executes at edge appliance firmware layer' }
   },
   'CVE-2023-3519': {
@@ -589,11 +589,11 @@ const KEV_MITIGATION_RULES = {
     ml:  { mitigates: false, reason: 'Edge ADC stack overflow executes pre-auth before user identity creation' }
   },
   'CVE-2023-20198': {
-    waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF virtual patch blocks unauthenticated HTTP REST /webui endpoint access' },
+    waf: { mitigates: false, reason: 'Direct REST management endpoint bypasses edge reverse proxy' },
     ml:  { mitigates: false, reason: 'Direct network boundary exploitation circumvents internal host ML agents' }
   },
   'CVE-2024-21887': {
-    waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF ruleset filters command injection payload in /api/v1/license/keys-status' },
+    waf: { mitigates: false, reason: 'In-line edge gateway exploit triggers prior to internal microservice logs' },
     ml:  { mitigates: false, reason: 'In-line edge gateway exploit triggers prior to internal microservice logs' }
   },
 
@@ -686,6 +686,19 @@ function checkVulnMitigation(vulnId, mode, node) {
   };
 
   if (mode === 'patch') {
+    // WAF only inspects HTTP/HTTPS traffic: completely blind to VPNs, SD-WAN, and private peered links
+    const isNonHttpProtocol = node.groupId === 'aws-vpn' || 
+                              node.groupId === 'az-net' || 
+                              node.groupId === 'az-branch' || 
+                              node.groupId === 'partner-gw';
+    if (isNonHttpProtocol) {
+      return {
+        addressed: false,
+        badge: 'WAF BLIND',
+        reason: 'WAF operates at L7 HTTP; completely blind to VPN tunnels and network backbone protocols'
+      };
+    }
+
     if (rule.waf && rule.waf.mitigates) {
       return {
         addressed: true,
