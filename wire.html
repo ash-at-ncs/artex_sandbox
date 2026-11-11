@@ -566,7 +566,7 @@ const LAYER_KEVS = [
   ]
 ];
 
-// Architectural Layer Definitions: Compact, more numerous icons with clustered backend databases
+// Architectural Layer Definitions: Randomly denser forest of items with 1-3 clustered instances of the same icon
 const LAYER_CONFIG = [
   {
     name: '01 / Cloud Ingress',
@@ -574,26 +574,26 @@ const LAYER_CONFIG = [
     clusters: [
       {
         name: 'AWS Cloud Perimeter',
-        nodes: [
-          { id: 'aws-cloud', label: 'AWS Public Cloud', icon: 'public-cloud.png' },
-          { id: 'aws-infra', label: 'AWS Infra Mesh', icon: 'cloud-infrastructure.png' },
-          { id: 'aws-vpn', label: 'AWS Client VPN', icon: 'remote-access.png' }
+        targets: [
+          { id: 'aws-cloud', icon: 'public-cloud.png', variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
+          { id: 'aws-infra', icon: 'cloud-infrastructure.png', variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
+          { id: 'aws-vpn', icon: 'remote-access.png', variants: ['AWS Client VPN'] }
         ]
       },
       {
         name: 'Azure Enterprise',
-        nodes: [
-          { id: 'az-cloud', label: 'Azure Cloud', icon: 'public-cloud.png' },
-          { id: 'az-net', label: 'ExpressRoute Net', icon: 'network.png' },
-          { id: 'az-branch', label: 'Branch Gateway', icon: 'branch.png' }
+        targets: [
+          { id: 'az-cloud', icon: 'public-cloud.png', variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
+          { id: 'az-net', icon: 'network.png', variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
+          { id: 'az-branch', icon: 'branch.png', variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] }
         ]
       },
       {
         name: 'GCP & Partners',
-        nodes: [
-          { id: 'gcp-infra', label: 'GCP Compute Mesh', icon: 'cloud-infrastructure.png' },
-          { id: 'partner-gw', label: 'B2B Partner Link', icon: 'partners.png' },
-          { id: 'ext-surface', label: 'External Attack Surface', icon: 'attack-surface.png' }
+        targets: [
+          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
+          { id: 'partner-gw', icon: 'partners.png', variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
+          { id: 'ext-surface', icon: 'attack-surface.png', variants: ['External Attack Surface'] }
         ]
       }
     ]
@@ -604,25 +604,25 @@ const LAYER_CONFIG = [
     clusters: [
       {
         name: 'API Gateways',
-        nodes: [
-          { id: 'cust-api', label: 'Customer REST Gateway', icon: 'api.png' },
-          { id: 'partner-api', label: 'Partner GraphQL API', icon: 'api.png' },
-          { id: 'waf-proxy', label: 'Edge Reverse Proxy', icon: 'server-infrastructure.png', isSecurity: true }
+        targets: [
+          { id: 'cust-api', icon: 'api.png', variants: ['Customer REST GW #01', 'Customer REST GW #02', 'Customer REST GW #03'] },
+          { id: 'partner-api', icon: 'api.png', variants: ['Partner GraphQL Gateway', 'B2B Webhook Ingress', 'Partner Sync API'] },
+          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] }
         ]
       },
       {
         name: 'Identity & Access',
-        nodes: [
-          { id: 'iam-idp', label: 'OAuth2 / Okta IdP', icon: 'identity.png' },
-          { id: 'vault-creds', label: 'Vault Configuration', icon: 'configuration.png', isSecurity: true },
-          { id: 'sentry-auth', label: 'Ivanti Sentry GW', icon: 'endpoint.png' }
+        targets: [
+          { id: 'iam-idp', icon: 'identity.png', variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
+          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['Vault Secrets Store'] },
+          { id: 'sentry-auth', icon: 'endpoint.png', variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] }
         ]
       },
       {
         name: 'Boundary Controls',
-        nodes: [
-          { id: 'threat-det', label: 'WAF Threat Detection', icon: 'threat-detection.png', isSecurity: true },
-          { id: 'soc-sensor', label: 'Perimeter SOC Telemetry', icon: 'soc.png', isSecurity: true }
+        targets: [
+          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, variants: ['WAF Threat Detection'] },
+          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, variants: ['Perimeter SOC Telemetry'] }
         ]
       }
     ]
@@ -633,26 +633,26 @@ const LAYER_CONFIG = [
     clusters: [
       {
         name: 'Core Applications',
-        nodes: [
-          { id: 'app-engine', label: 'App Engine Cluster', icon: 'application.png' },
-          { id: 'comp-registry', label: 'Container Registry', icon: 'components.png' },
-          { id: 'cicd-runner', label: 'CI/CD Automated Pipeline', icon: 'cicd.png' }
+        targets: [
+          { id: 'app-engine', icon: 'application.png', variants: ['App Engine (Core)', 'App Engine (Billing)', 'App Engine (Checkout)'] },
+          { id: 'comp-registry', icon: 'components.png', variants: ['Container Registry'] },
+          { id: 'cicd-runner', icon: 'cicd.png', variants: ['CI/CD Pipeline Runner 01', 'CI/CD Pipeline Runner 02'] }
         ]
       },
       {
         name: 'Internal Microservices',
-        nodes: [
-          { id: 'log4j-svc', label: 'Log4j Logging Service', icon: 'server-infrastructure.png' },
-          { id: 'spring-svc', label: 'Spring Boot Broker', icon: 'application.png' },
-          { id: 'confluence-node', label: 'Internal Confluence', icon: 'server-infrastructure.png' }
+        targets: [
+          { id: 'log4j-svc', icon: 'server-infrastructure.png', variants: ['Log4j Logging Node 01', 'Log4j Logging Node 02'] },
+          { id: 'spring-svc', icon: 'application.png', variants: ['Spring Boot Service A', 'Spring Boot Service B'] },
+          { id: 'confluence-node', icon: 'server-infrastructure.png', variants: ['Internal Confluence'] }
         ]
       },
       {
-        name: 'AI & Intelligence',
-        nodes: [
-          { id: 'ai-core', label: 'Predictive AI Core', icon: 'ai.png' },
-          { id: 'iot-hub', label: 'Telemetry IoT Ingestion', icon: 'iot.png' },
-          { id: 'vuln-scan', label: 'Vulnerability Scanner', icon: 'vulnerability-management.png', isSecurity: true }
+        name: 'AI & Operations',
+        targets: [
+          { id: 'ai-core', icon: 'ai.png', variants: ['Predictive AI Core'] },
+          { id: 'iot-hub', icon: 'iot.png', variants: ['Telemetry IoT Ingestion'] },
+          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, variants: ['Vulnerability Scanner'] }
         ]
       }
     ]
@@ -663,18 +663,18 @@ const LAYER_CONFIG = [
     clusters: [
       {
         name: 'Database Cluster: Customer Records',
-        nodes: [
-          { id: 'lake-cust', label: 'Customer Lake S3', icon: 'data.png', isLake: true, isDb: true },
-          { id: 'db-rds', label: 'Customer SQL RDS', icon: 'server-infrastructure.png', isLake: true, isDb: true },
-          { id: 'moveit-sftp', label: 'MOVEit SFTP Data', icon: 'server-infrastructure.png', isLake: true, isDb: true }
+        targets: [
+          { id: 'lake-cust', icon: 'data.png', isLake: true, isDb: true, variants: ['Customer Lake S3 (Raw)', 'Customer Lake S3 (Curated)'] },
+          { id: 'db-rds', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['Customer SQL RDS (Primary)', 'Customer SQL RDS (Replica 1)', 'Customer SQL RDS (Replica 2)'] },
+          { id: 'moveit-sftp', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['MOVEit SFTP Gateway'] }
         ]
       },
       {
         name: 'Database Cluster: Analytics & Vaults',
-        nodes: [
-          { id: 'lake-ops', label: 'Operational Analytics', icon: 'data.png', isLake: true, isDb: true },
-          { id: 'nosql-doc', label: 'NoSQL Document Store', icon: 'server-infrastructure.png', isLake: true, isDb: true },
-          { id: 'dc-vault', label: 'Core SAN Storage', icon: 'data-center.png', isLake: true, isDb: true }
+        targets: [
+          { id: 'lake-ops', icon: 'data.png', isLake: true, isDb: true, variants: ['Operational Analytics Lake', 'Snowflake Warehouse'] },
+          { id: 'nosql-doc', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['NoSQL Document Store (Cluster A)', 'NoSQL Document Store (Cluster B)'] },
+          { id: 'dc-vault', icon: 'data-center.png', isLake: true, isDb: true, variants: ['Core SAN Storage Vault'] }
         ]
       }
     ]
@@ -752,41 +752,60 @@ function layoutGraph() {
     let kevIdx = 0;
 
     layer.clusters.forEach((cluster, clusterIdx) => {
-      const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.03, h * 0.03);
+      const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.025, h * 0.025);
       const clusterCenterX = w * (layer.xBand[0] + (layer.xBand[1] - layer.xBand[0]) * 0.5) + rand(-w * 0.02, w * 0.02);
 
-      const numNodes = cluster.nodes.length;
-      cluster.nodes.forEach((rawNode, nodeIdx) => {
-        // Generously separated cluster layout for maximum text legibility
-        const angle = (nodeIdx / numNodes) * Math.PI * 2 - Math.PI / 2 + rand(-0.1, 0.1);
-        const radiusX = rand(52, 68);
-        const radiusY = rand(40, 54);
+      const numTargets = cluster.targets.length;
+      cluster.targets.forEach((targetDef, targetIdx) => {
+        // Target family center anchor
+        const familyAngle = (targetIdx / numTargets) * Math.PI * 2 - Math.PI / 2 + rand(-0.08, 0.08);
+        const familyRadiusX = rand(58, 76);
+        const familyRadiusY = rand(44, 58);
+        const anchorX = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(familyAngle) * familyRadiusX));
+        const anchorY = Math.max(h * 0.12, Math.min(h * 0.88, clusterCenterY + Math.sin(familyAngle) * familyRadiusY));
 
-        const nx = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(angle) * radiusX));
-        const ny = Math.max(h * 0.12, Math.min(h * 0.88, clusterCenterY + Math.sin(angle) * radiusY));
+        // Randomly denser forest: 1 to 3 instances of the SAME icon clustered together
+        const maxVariants = targetDef.variants.length;
+        const instanceCount = maxVariants > 1 ? randInt(1, Math.min(3, maxVariants)) : 1;
 
-        const kev = layerKevPool[kevIdx % layerKevPool.length];
-        kevIdx++;
+        for (let vIdx = 0; vIdx < instanceCount; vIdx++) {
+          let ox = 0, oy = 0;
+          if (instanceCount === 2) {
+            ox = (vIdx === 0 ? -22 : 22) + rand(-3, 3);
+            oy = (vIdx === 0 ? -16 : 16) + rand(-3, 3);
+          } else if (instanceCount === 3) {
+            const iAngle = (vIdx / 3) * Math.PI * 2 - Math.PI / 2;
+            ox = Math.cos(iAngle) * 24 + rand(-3, 3);
+            oy = Math.sin(iAngle) * 20 + rand(-3, 3);
+          }
 
-        const node = {
-          id: rawNode.id,
-          label: rawNode.label,
-          icon: rawNode.icon,
-          isSecurity: !!rawNode.isSecurity,
-          isLake: !!rawNode.isLake,
-          isDb: !!rawNode.isDb,
-          layerIdx: layerIdx,
-          clusterName: cluster.name,
-          x: nx,
-          y: ny,
-          kev: kev,
-          hit: false,
-          defended: false,
-          downstream: [],
-          el: null
-        };
+          const nx = Math.max(w * 0.04, Math.min(w * 0.95, anchorX + ox));
+          const ny = Math.max(h * 0.11, Math.min(h * 0.89, anchorY + oy));
 
-        currentNodes.push(node);
+          const kev = layerKevPool[kevIdx % layerKevPool.length];
+          kevIdx++;
+
+          const node = {
+            id: `${targetDef.id}-${vIdx + 1}`,
+            groupId: targetDef.id,
+            label: targetDef.variants[vIdx],
+            icon: targetDef.icon,
+            isSecurity: !!targetDef.isSecurity,
+            isLake: !!targetDef.isLake,
+            isDb: !!targetDef.isDb,
+            layerIdx: layerIdx,
+            clusterName: cluster.name,
+            x: nx,
+            y: ny,
+            kev: kev,
+            hit: false,
+            defended: false,
+            downstream: [],
+            el: null
+          };
+
+          currentNodes.push(node);
+        }
       });
     });
   });
@@ -1041,6 +1060,20 @@ function traverseFromNode(node, depth) {
             const isFinalLake = target.layerIdx === 3;
             triggerNodeHit(target, isFinalLake);
 
+            // Multi-instance target group compromise: 1 or 2 get hacked by a given vuln
+            if (target.groupId && layerHits[depth] < 3 && Math.random() < 0.45) {
+              const siblings = currentNodes.filter(n => n.groupId === target.groupId && n.id !== target.id && !n.hit && !n.defended);
+              if (siblings.length > 0) {
+                const siblingVic = shuffle(siblings)[0];
+                setTimeout(() => {
+                  if (layerHits[depth] < 3 && !siblingVic.hit) {
+                    layerHits[depth]++;
+                    triggerNodeHit(siblingVic, target.isLake, target.kev);
+                  }
+                }, 220);
+              }
+            }
+
             // Backend Clustered Database Lateral Compromise:
             // "at the backend there might be a few databases clustered and 1 or 2 get hacked by a given vuln, up to 3."
             if (isFinalLake && target.isDb) {
@@ -1052,8 +1085,10 @@ function traverseFromNode(node, depth) {
                 const victims = shuffle(clusterPeers).slice(0, extraDbCount);
                 victims.forEach((vic, vIdx) => {
                   setTimeout(() => {
-                    layerHits[3]++;
-                    triggerNodeHit(vic, true, target.kev);
+                    if (layerHits[3] < 3) {
+                      layerHits[3]++;
+                      triggerNodeHit(vic, true, target.kev);
+                    }
                   }, 280 + vIdx * 200);
                 });
               }
