@@ -337,16 +337,17 @@
     transition: background-color 0.4s ease, filter 0.4s ease, transform 0.3s ease;
   }
 
-  /* Node Label */
+  /* Node Label - Very Light Green for maximum legibility */
   .node-label {
     margin-top: 4px;
-    font-size: 8px;
+    font-size: 8.5px;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--green);
-    text-shadow: 0 0 5px var(--green-glow);
+    letter-spacing: 0.05em;
+    color: #d4ffe8;
+    text-shadow: 0 0 5px rgba(212, 255, 232, 0.45);
     white-space: nowrap;
     text-align: center;
+    max-width: 130px;
     transition: color 0.4s ease, text-shadow 0.4s ease;
   }
 
@@ -359,6 +360,7 @@
     text-shadow: 0 0 7px var(--red-glow);
     white-space: nowrap;
     text-align: center;
+    max-width: 140px;
     background: rgba(45, 6, 12, 0.88);
     border: 1px solid rgba(255, 34, 68, 0.55);
     border-radius: 3px;
@@ -755,13 +757,13 @@ function layoutGraph() {
 
       const numNodes = cluster.nodes.length;
       cluster.nodes.forEach((rawNode, nodeIdx) => {
-        // Neatly grouped compact cluster layout
-        const angle = (nodeIdx / numNodes) * Math.PI * 2 + rand(-0.2, 0.2);
-        const radiusX = rand(22, 36);
-        const radiusY = rand(18, 30);
+        // Generously separated cluster layout for maximum text legibility
+        const angle = (nodeIdx / numNodes) * Math.PI * 2 - Math.PI / 2 + rand(-0.1, 0.1);
+        const radiusX = rand(52, 68);
+        const radiusY = rand(40, 54);
 
         const nx = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(angle) * radiusX));
-        const ny = Math.max(h * 0.11, Math.min(h * 0.90, clusterCenterY + Math.sin(angle) * radiusY));
+        const ny = Math.max(h * 0.12, Math.min(h * 0.88, clusterCenterY + Math.sin(angle) * radiusY));
 
         const kev = layerKevPool[kevIdx % layerKevPool.length];
         kevIdx++;
