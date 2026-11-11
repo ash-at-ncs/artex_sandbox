@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ARTEX | Wire Diagram Simulation v2.2.0</title>
+<title>ARTEX | Wire Diagram Simulation v2.3.0</title>
 <style>
   :root {
     --bg: #000000;
@@ -515,7 +515,7 @@
     </div>
   </div>
 
-  <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.2.0</span></a>
+  <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.3.0</span></a>
 
   <!-- Fullscreen SVG for straight wires & pulses -->
   <svg id="wire-svg"></svg>
@@ -530,39 +530,53 @@ const ICON_BASE = 'assets/diagram-icons/transparent/';
 
 // Ground-truth CISA KEV mappings strictly partitioned by architecture layer
 const LAYER_KEVS = [
-  // Layer 0: Perimeter & Cloud Ingress (T1190)
+  // Layer 0: Perimeter & Cloud Ingress (T1190, T1068, T1059)
   [
     { id: 'CVE-2024-4577', title: 'PHP CGI Arg Injection RCE', tech: 'T1190' },
     { id: 'CVE-2023-46805', title: 'Ivanti Connect Secure Auth Bypass', tech: 'T1190' },
     { id: 'CVE-2024-3400', title: 'PAN-OS Command Injection RCE', tech: 'T1190' },
     { id: 'CVE-2023-3519', title: 'Citrix NetScaler ADC Unauth RCE', tech: 'T1190' },
     { id: 'CVE-2023-20198', title: 'Cisco IOS XE Priv Escalation', tech: 'T1068' },
-    { id: 'CVE-2024-21887', title: 'Ivanti Connect Policy Injection', tech: 'T1059' }
+    { id: 'CVE-2024-21887', title: 'Ivanti Connect Policy Injection', tech: 'T1059' },
+    { id: 'CVE-2022-1388', title: 'F5 BIG-IP iControl REST Auth Bypass', tech: 'T1190' },
+    { id: 'CVE-2022-42475', title: 'FortiOS SSL-VPN Heap Buffer Overflow', tech: 'T1190' }
   ],
-  // Layer 1: API Gateways & Access Control (T1068, T1552)
+  // Layer 1: API Gateways & Access Control (T1068, T1552, T1190)
   [
     { id: 'CVE-2023-22515', title: 'Confluence Broken Access Control', tech: 'T1068' },
     { id: 'CVE-2024-27198', title: 'TeamCity Admin Token Minting', tech: 'T1552' },
     { id: 'CVE-2023-38035', title: 'Ivanti Sentry API Auth Bypass', tech: 'T1068' },
     { id: 'CVE-2023-4966', title: 'Citrix Bleed Session Leak', tech: 'T1552' },
     { id: 'CVE-2024-1709', title: 'ScreenConnect Auth Bypass', tech: 'T1068' },
-    { id: 'CVE-2021-26855', title: 'ProxyLogon Exchange SSRF', tech: 'T1190' }
+    { id: 'CVE-2021-26855', title: 'ProxyLogon Exchange SSRF', tech: 'T1190' },
+    { id: 'CVE-2022-26923', title: 'Active Directory Certifried Spoofing', tech: 'T1068' },
+    { id: 'CVE-2023-29357', title: 'SharePoint OAuth Token Bypass', tech: 'T1552' }
   ],
-  // Layer 2: Microservices Mesh & Applications (T1059, T1210)
+  // Layer 2: Microservices Mesh & Applications (T1059, T1210, T1505)
   [
     { id: 'CVE-2021-44228', title: 'Log4Shell JNDI Remote Code Execution', tech: 'T1059' },
     { id: 'CVE-2023-22527', title: 'Confluence OGNL Template Injection', tech: 'T1059' },
     { id: 'CVE-2022-22965', title: 'Spring4Shell Data Binding RCE', tech: 'T1190' },
     { id: 'CVE-2022-29464', title: 'WSO2 API Arbitrary File Upload', tech: 'T1505' },
     { id: 'CVE-2023-2868', title: 'Barracuda ESG Command Injection', tech: 'T1059' },
-    { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' }
+    { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' },
+    { id: 'CVE-2023-46604', title: 'ActiveMQ OpenWire Deserialization RCE', tech: 'T1059' },
+    { id: 'CVE-2022-46169', title: 'Cacti Unauth Command Injection RCE', tech: 'T1059' }
   ],
-  // Layer 3: Backend Clustered Databases & Repositories (T1041, T1003)
+  // Layer 3: Backend Clustered Databases, Vaults & Repositories (T1041, T1003, T1005)
   [
     { id: 'CVE-2023-34362', title: 'MOVEit Transfer SQLi Exfiltration', tech: 'T1041' },
     { id: 'CVE-2023-27350', title: 'PaperCut Setup Wizard DB Dump', tech: 'T1041' },
     { id: 'CVE-2020-1472', title: 'Zerologon Cryptographic Hash Dump', tech: 'T1003' },
-    { id: 'CVE-2023-36884', title: 'Office HTML Document Exfiltration', tech: 'T1041' }
+    { id: 'CVE-2023-36884', title: 'Office Document File Exfiltration', tech: 'T1041' },
+    { id: 'CVE-2023-0669', title: 'GoAnywhere MFT Deserialization DB Dump', tech: 'T1041' },
+    { id: 'CVE-2023-48788', title: 'FortiClient EMS SQLi Database Dump', tech: 'T1041' },
+    { id: 'CVE-2022-47966', title: 'ManageEngine SAML RCE & PostgreSQL Dump', tech: 'T1041' },
+    { id: 'CVE-2024-37085', title: 'VMware ESXi AD Bypass & VMFS Disk Dump', tech: 'T1005' },
+    { id: 'CVE-2023-24489', title: 'Citrix ShareFile Storage Zone Exfiltration', tech: 'T1041' },
+    { id: 'CVE-2022-26134', title: 'Confluence OGNL DB Pool Credential Harvest', tech: 'T1003' },
+    { id: 'CVE-2024-1086', title: 'Linux Netfilter PrivEsc & Vault DB Dump', tech: 'T1003' },
+    { id: 'CVE-2022-22954', title: 'VMware Workspace ONE SSTI DB Secrets Dump', tech: 'T1041' }
   ]
 ];
 
@@ -596,6 +610,14 @@ const KEV_MITIGATION_RULES = {
     waf: { mitigates: false, reason: 'In-line edge gateway exploit triggers prior to internal microservice logs' },
     ml:  { mitigates: false, reason: 'In-line edge gateway exploit triggers prior to internal microservice logs' }
   },
+  'CVE-2022-1388': {
+    waf: { mitigates: true, control: 'NIST SC-7', reason: 'WAF drops hop-by-hop Connection header smuggling to /mgmt/shared/authn' },
+    ml:  { mitigates: false, reason: 'Edge appliance admin bypass executes outside host mesh' }
+  },
+  'CVE-2022-42475': {
+    waf: { mitigates: false, reason: 'VPN binary protocol heap overflow bypasses L7 HTTP reverse proxy' },
+    ml:  { mitigates: false, reason: 'Edge VPN daemon heap overwrite occurs before telemetry ingestion' }
+  },
 
   // Layer 1 - Gateways & Auth
   'CVE-2023-22515': {
@@ -621,6 +643,14 @@ const KEV_MITIGATION_RULES = {
   'CVE-2021-26855': {
     waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF virtual patch filters X-AnonResource-Backend SSRF header' },
     ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects internal SSRF lateral probe to backend Exchange RPC' }
+  },
+  'CVE-2022-26923': {
+    waf: { mitigates: false, reason: 'Active Directory certificate enrollment traffic is outside HTTP WAF scope' },
+    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Behavioral ML detects anomalous dNSHostName attribute modification on computer account' }
+  },
+  'CVE-2023-29357': {
+    waf: { mitigates: false, reason: 'Forged JWT signing alg=none tokens pass initial TLS termination proxies' },
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML isolates spoofed farm administrator claims without valid IdP signature' }
   },
 
   // Layer 2 - Services Mesh & Applications
@@ -648,8 +678,16 @@ const KEV_MITIGATION_RULES = {
     waf: { mitigates: false, reason: 'MSDT URI handler protocol payload passes perimeter proxies as normal doc link' },
     ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML terminates rogue sdiagnhost.exe process execution' }
   },
+  'CVE-2023-46604': {
+    waf: { mitigates: false, reason: 'OpenWire TCP 61616 protocol traffic bypasses perimeter HTTP WAF' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML terminates anomalous Java ClassPathXmlApplicationContext load' }
+  },
+  'CVE-2022-46169': {
+    waf: { mitigates: false, reason: 'Forwarded-For header spoofing bypasses remote agent authentication' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML flags shell command injection in poller.php execution' }
+  },
 
-  // Layer 3 - Clustered Backend Databases & Vaults
+  // Layer 3 - Clustered Backend Databases, Vaults & Repositories
   'CVE-2023-34362': {
     waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF SQLi virtual patch inspects & blocks malformed X-MOVEit headers' },
     ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects abnormal mass query exfiltration on core SQL tables' }
@@ -665,6 +703,38 @@ const KEV_MITIGATION_RULES = {
   'CVE-2023-36884': {
     waf: { mitigates: false, reason: 'Office document protocol payload bypasses perimeter application firewalls' },
     ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML halts SearchFilterHost.exe memory injection and credential dump' }
+  },
+  'CVE-2023-0669': {
+    waf: { mitigates: false, reason: 'Encrypted deserialization payload in GoAnywhere passes perimeter proxies' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects abnormal customer storage zone file exfiltration' }
+  },
+  'CVE-2023-48788': {
+    waf: { mitigates: false, reason: 'FortiClient EMS SQL injection occurs inside internal enterprise client RPC' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects xp_cmdshell execution and mass DB schema dumping' }
+  },
+  'CVE-2022-47966': {
+    waf: { mitigates: false, reason: 'SAML XML body injection evades edge pattern matchers without deep cert validation' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML blocks anomalous PostgreSQL data export and child process execution' }
+  },
+  'CVE-2024-37085': {
+    waf: { mitigates: false, reason: 'ESXi hypervisor management protocol operates outside perimeter WAF boundaries' },
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML alerts on rogue ESX Admins group creation attempting VMFS storage exfil' }
+  },
+  'CVE-2023-24489': {
+    waf: { mitigates: false, reason: 'Unauthenticated file upload to Storage Zone Controller bypasses perimeter checks' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML halts unexpected high-volume S3 customer lake exfiltration' }
+  },
+  'CVE-2022-26134': {
+    waf: { mitigates: false, reason: 'OGNL payload executed against internal application server pool' },
+    ml:  { mitigates: true, control: 'NIST IA-5', reason: 'Behavioral ML detects memory dumping of database connection credentials' }
+  },
+  'CVE-2024-1086': {
+    waf: { mitigates: false, reason: 'Local Linux kernel netfilter double-free exploit is internal to host OS' },
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML terminates unauthorized privilege escalation targeting root vault databases' }
+  },
+  'CVE-2022-22954': {
+    waf: { mitigates: false, reason: 'SSTI expression inside OAuth client parameters bypasses standard URI filters' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects lateral dump of embedded identity database secrets' }
   }
 };
 
@@ -776,25 +846,25 @@ const LAYER_CONFIG = [
       {
         name: 'AWS Cloud Perimeter',
         targets: [
-          { id: 'aws-cloud', icon: 'public-cloud.png', variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
-          { id: 'aws-infra', icon: 'cloud-infrastructure.png', variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
-          { id: 'aws-vpn', icon: 'remote-access.png', variants: ['AWS Client VPN'] }
+          { id: 'aws-cloud', icon: 'public-cloud.png', matchingKevs: ['CVE-2024-4577', 'CVE-2022-1388'], variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
+          { id: 'aws-infra', icon: 'cloud-infrastructure.png', matchingKevs: ['CVE-2024-3400', 'CVE-2023-3519'], variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
+          { id: 'aws-vpn', icon: 'remote-access.png', matchingKevs: ['CVE-2023-46805', 'CVE-2022-42475'], variants: ['AWS Client VPN Gateway'] }
         ]
       },
       {
         name: 'Azure Enterprise',
         targets: [
-          { id: 'az-cloud', icon: 'public-cloud.png', variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
-          { id: 'az-net', icon: 'network.png', variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
-          { id: 'az-branch', icon: 'branch.png', variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] }
+          { id: 'az-cloud', icon: 'public-cloud.png', matchingKevs: ['CVE-2024-4577', 'CVE-2022-1388'], variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
+          { id: 'az-net', icon: 'network.png', matchingKevs: ['CVE-2023-20198', 'CVE-2024-21887'], variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
+          { id: 'az-branch', icon: 'branch.png', matchingKevs: ['CVE-2023-46805', 'CVE-2022-42475'], variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] }
         ]
       },
       {
         name: 'GCP & Partners',
         targets: [
-          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
-          { id: 'partner-gw', icon: 'partners.png', variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
-          { id: 'ext-surface', icon: 'attack-surface.png', variants: ['External Attack Surface'] }
+          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', matchingKevs: ['CVE-2024-3400', 'CVE-2023-3519'], variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
+          { id: 'partner-gw', icon: 'partners.png', matchingKevs: ['CVE-2023-20198', 'CVE-2024-21887'], variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
+          { id: 'ext-surface', icon: 'attack-surface.png', matchingKevs: ['CVE-2024-4577', 'CVE-2023-3519'], variants: ['External Attack Surface'] }
         ]
       }
     ]
@@ -806,24 +876,24 @@ const LAYER_CONFIG = [
       {
         name: 'API Gateways',
         targets: [
-          { id: 'cust-api', icon: 'api.png', variants: ['Customer REST GW #01', 'Customer REST GW #02', 'Customer REST GW #03'] },
-          { id: 'partner-api', icon: 'api.png', variants: ['Partner GraphQL Gateway', 'B2B Webhook Ingress', 'Partner Sync API'] },
-          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] }
+          { id: 'cust-api', icon: 'api.png', matchingKevs: ['CVE-2023-38035', 'CVE-2021-26855'], variants: ['Customer REST GW #01', 'Customer REST GW #02', 'Customer REST GW #03'] },
+          { id: 'partner-api', icon: 'api.png', matchingKevs: ['CVE-2023-38035', 'CVE-2021-26855'], variants: ['Partner GraphQL Gateway', 'B2B Webhook Ingress', 'Partner Sync API'] },
+          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, matchingKevs: ['CVE-2021-26855', 'CVE-2023-38035'], variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] }
         ]
       },
       {
         name: 'Identity & Access',
         targets: [
-          { id: 'iam-idp', icon: 'identity.png', variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
-          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['Vault Secrets Store'] },
-          { id: 'sentry-auth', icon: 'endpoint.png', variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] }
+          { id: 'iam-idp', icon: 'identity.png', matchingKevs: ['CVE-2023-4966', 'CVE-2022-26923'], variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
+          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, matchingKevs: ['CVE-2024-27198', 'CVE-2022-26923'], variants: ['Vault Secrets Store'] },
+          { id: 'sentry-auth', icon: 'endpoint.png', matchingKevs: ['CVE-2024-1709', 'CVE-2024-27198'], variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] }
         ]
       },
       {
         name: 'Boundary Controls',
         targets: [
-          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, variants: ['WAF Threat Detection'] },
-          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, variants: ['Perimeter SOC Telemetry'] }
+          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, matchingKevs: ['CVE-2023-22515', 'CVE-2023-29357'], variants: ['WAF Threat Detection'] },
+          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, matchingKevs: ['CVE-2023-22515', 'CVE-2023-29357'], variants: ['Perimeter SOC Telemetry'] }
         ]
       }
     ]
@@ -835,25 +905,25 @@ const LAYER_CONFIG = [
       {
         name: 'Core Applications',
         targets: [
-          { id: 'app-engine', icon: 'application.png', variants: ['App Engine (Core)', 'App Engine (Billing)', 'App Engine (Checkout)'] },
-          { id: 'comp-registry', icon: 'components.png', variants: ['Container Registry'] },
-          { id: 'cicd-runner', icon: 'cicd.png', variants: ['CI/CD Pipeline Runner 01', 'CI/CD Pipeline Runner 02'] }
+          { id: 'app-engine', icon: 'application.png', matchingKevs: ['CVE-2022-29464', 'CVE-2022-30190'], variants: ['App Engine (Core)', 'App Engine (Billing)', 'App Engine (Checkout)'] },
+          { id: 'comp-registry', icon: 'components.png', matchingKevs: ['CVE-2023-46604', 'CVE-2022-46169'], variants: ['Container Registry'] },
+          { id: 'cicd-runner', icon: 'cicd.png', matchingKevs: ['CVE-2023-46604', 'CVE-2022-46169'], variants: ['CI/CD Pipeline Runner 01', 'CI/CD Pipeline Runner 02'] }
         ]
       },
       {
         name: 'Internal Microservices',
         targets: [
-          { id: 'log4j-svc', icon: 'server-infrastructure.png', variants: ['Log4j Logging Node 01', 'Log4j Logging Node 02'] },
-          { id: 'spring-svc', icon: 'application.png', variants: ['Spring Boot Service A', 'Spring Boot Service B'] },
-          { id: 'confluence-node', icon: 'server-infrastructure.png', variants: ['Internal Confluence'] }
+          { id: 'log4j-svc', icon: 'server-infrastructure.png', matchingKevs: ['CVE-2021-44228'], variants: ['Log4j Logging Node 01', 'Log4j Logging Node 02'] },
+          { id: 'spring-svc', icon: 'application.png', matchingKevs: ['CVE-2022-22965'], variants: ['Spring Boot Service A', 'Spring Boot Service B'] },
+          { id: 'confluence-node', icon: 'server-infrastructure.png', matchingKevs: ['CVE-2023-22527'], variants: ['Internal Confluence App'] }
         ]
       },
       {
         name: 'AI & Operations',
         targets: [
-          { id: 'ai-core', icon: 'ai.png', variants: ['Predictive AI Core'] },
-          { id: 'iot-hub', icon: 'iot.png', variants: ['Telemetry IoT Ingestion'] },
-          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, variants: ['Vulnerability Scanner'] }
+          { id: 'ai-core', icon: 'ai.png', matchingKevs: ['CVE-2022-29464', 'CVE-2023-2868'], variants: ['Predictive AI Core'] },
+          { id: 'iot-hub', icon: 'iot.png', matchingKevs: ['CVE-2023-2868', 'CVE-2022-46169'], variants: ['Telemetry IoT Ingestion'] },
+          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, matchingKevs: ['CVE-2022-30190', 'CVE-2023-46604'], variants: ['Vulnerability Scanner'] }
         ]
       }
     ]
@@ -863,19 +933,61 @@ const LAYER_CONFIG = [
     xBand: [0.78, 0.92],
     clusters: [
       {
-        name: 'Database Cluster: Customer Records',
+        name: 'Database Cluster: Customer Records & Orders',
         targets: [
-          { id: 'lake-cust', icon: 'data.png', isLake: true, isDb: true, variants: ['Customer Lake S3 (Raw)', 'Customer Lake S3 (Curated)'] },
-          { id: 'db-rds', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['Customer SQL RDS (Primary)', 'Customer SQL RDS (Replica 1)', 'Customer SQL RDS (Replica 2)'] },
-          { id: 'moveit-sftp', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['MOVEit SFTP Gateway'] }
+          { 
+            id: 'lake-cust', 
+            icon: 'data.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2023-24489', 'CVE-2023-36884'],
+            variants: ['Customer Lake S3 (Parquet · Data Platform)', 'Customer Lake S3 (Curated · BI Team)', 'Customer Lake S3 (Cold Archive · Compliance)'] 
+          },
+          { 
+            id: 'db-rds', 
+            icon: 'server-infrastructure.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2023-48788', 'CVE-2022-47966'],
+            variants: ['Customer Postgres RDS (Primary · Core DBA)', 'Customer Postgres RDS (Replica 1 · Read Ops)', 'Customer MySQL RDS (Orders · Merchant Team)'] 
+          },
+          { 
+            id: 'moveit-sftp', 
+            icon: 'server-infrastructure.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2023-34362', 'CVE-2023-0669'],
+            variants: ['MOVEit SFTP Gateway (B2B EDI Integration)', 'GoAnywhere MFT (FinOps Data Exchange)'] 
+          }
         ]
       },
       {
-        name: 'Database Cluster: Analytics & Vaults',
+        name: 'Database Cluster: Analytics, Document & Secrets',
         targets: [
-          { id: 'lake-ops', icon: 'data.png', isLake: true, isDb: true, variants: ['Operational Analytics Lake', 'Snowflake Warehouse'] },
-          { id: 'nosql-doc', icon: 'server-infrastructure.png', isLake: true, isDb: true, variants: ['NoSQL Document Store (Cluster A)', 'NoSQL Document Store (Cluster B)'] },
-          { id: 'dc-vault', icon: 'data-center.png', isLake: true, isDb: true, variants: ['Core SAN Storage Vault'] }
+          { 
+            id: 'lake-ops', 
+            icon: 'data.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2023-27350', 'CVE-2022-22954'],
+            variants: ['Snowflake Warehouse (SnowSQL · Enterprise BI)', 'ClickHouse Telemetry Lake (SecOps Team)', 'BigQuery Analytics Lake (Marketing Data)'] 
+          },
+          { 
+            id: 'nosql-doc', 
+            icon: 'server-infrastructure.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2022-26134', 'CVE-2024-1086'],
+            variants: ['MongoDB Cluster (DocStore · Mobile App Team)', 'Redis Cache Cluster (In-Memory · Session Ops)', 'Cassandra DB (Streaming · Event Team)'] 
+          },
+          { 
+            id: 'dc-vault', 
+            icon: 'data-center.png', 
+            isLake: true, 
+            isDb: true, 
+            matchingKevs: ['CVE-2020-1472', 'CVE-2024-37085'],
+            variants: ['Core SAN Storage Vault (Storage Admin Team)', 'HashiCorp Vault Store (SecOps Secrets Team)', 'Active Directory NTDS Vault (Identity Team)'] 
+          }
         ]
       }
     ]
@@ -973,6 +1085,7 @@ function layoutGraph() {
     const clusterHeight = (h * 0.76) / numClusters;
     const startY = h * 0.13;
     const layerKevPool = shuffle(LAYER_KEVS[layerIdx]);
+    const assignedKevIdsInLayer = new Set();
     let kevIdx = 0;
 
     layer.clusters.forEach((cluster, clusterIdx) => {
@@ -1006,12 +1119,29 @@ function layoutGraph() {
           const nx = Math.max(w * 0.04, Math.min(w * 0.95, anchorX + ox));
           const ny = Math.max(h * 0.11, Math.min(h * 0.89, anchorY + oy));
 
-          const kev = layerKevPool[kevIdx % layerKevPool.length];
-          kevIdx++;
+          // Select matching CISA KEV tailored to this infrastructure target
+          const targetKevIds = targetDef.matchingKevs || [];
+          const layerPool = LAYER_KEVS[layerIdx];
+          const candidateKevs = layerPool.filter(k => targetKevIds.includes(k.id));
+          const availableKevs = candidateKevs.filter(k => !assignedKevIdsInLayer.has(k.id));
+
+          let kev = null;
+          if (availableKevs.length > 0) {
+            kev = availableKevs[0];
+            assignedKevIdsInLayer.add(kev.id);
+          } else if (candidateKevs.length > 0) {
+            kev = candidateKevs[vIdx % candidateKevs.length];
+          } else {
+            const unusedInLayer = layerPool.filter(k => !assignedKevIdsInLayer.has(k.id));
+            kev = unusedInLayer.length > 0 ? unusedInLayer[0] : layerKevPool[kevIdx % layerKevPool.length];
+            assignedKevIdsInLayer.add(kev.id);
+            kevIdx++;
+          }
 
           const node = {
             id: `${targetDef.id}-${vIdx + 1}`,
             groupId: targetDef.id,
+            targetDef: targetDef,
             label: targetDef.variants[vIdx],
             icon: targetDef.icon,
             isSecurity: !!targetDef.isSecurity,
@@ -1169,23 +1299,30 @@ function resetInfraVisuals() {
 }
 
 /**
- * Returns a distinct CISA KEV for the given node so multiple compromises
- * in the same layer never repeat the same vulnerability.
+ * Returns a distinct CISA KEV tailored to the node's specific infrastructure icon/type,
+ * guaranteeing that multiple compromises in the same layer never repeat the same vulnerability.
  */
 function getDistinctKevForNode(node) {
   const layerIdx = node.layerIdx;
-  const pool = LAYER_KEVS[layerIdx] || [];
+  const layerPool = LAYER_KEVS[layerIdx] || [];
+  const targetKevIds = (node.targetDef && node.targetDef.matchingKevs) || [];
   
-  // Available KEVs in this layer that haven't been displayed on another hit node yet
-  const unusedInLayer = pool.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
+  // 1. First priority: KEVs that fit this exact infrastructure icon/type and haven't been used yet in this layer
+  const matchingCandidates = layerPool.filter(k => targetKevIds.includes(k.id));
+  const unusedMatching = matchingCandidates.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
   
-  let chosen = node.kev;
-  if (usedKevIdsPerLayer[layerIdx].includes(chosen.id)) {
+  let chosen = null;
+  if (unusedMatching.length > 0) {
+    chosen = unusedMatching[0];
+  } else if (matchingCandidates.length > 0 && !usedKevIdsPerLayer[layerIdx].includes(node.kev.id)) {
+    chosen = node.kev;
+  } else {
+    // 2. Any unused KEV in this layer
+    const unusedInLayer = layerPool.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
     if (unusedInLayer.length > 0) {
       chosen = unusedInLayer[0];
     } else {
-      const others = pool.filter(k => k.id !== node.kev.id);
-      chosen = others.length > 0 ? others[0] : node.kev;
+      chosen = matchingCandidates.length > 0 ? matchingCandidates[0] : node.kev;
     }
   }
   
