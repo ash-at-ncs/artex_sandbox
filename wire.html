@@ -913,7 +913,15 @@ function triggerNodeDefense(node, wire) {
     node.el.classList.add('defended');
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
-      kevEl.innerHTML = `<span class="cve">SHIELDED · WAF VIRTUAL PATCH</span><span class="vuln-title">Mitigated ${node.kev.id} [${node.kev.tech}]</span>`;
+      let badgeTitle = 'CONTAINED · DEFENSE SHIELD';
+      if (currentMode === 'patch') {
+        badgeTitle = 'SHIELDED · WAF VIRTUAL PATCH';
+      } else if (currentMode === 'defender') {
+        badgeTitle = 'CONTAINED · BEHAVIORAL ML [SI-4]';
+      } else if (currentMode === 'combined') {
+        badgeTitle = node.layerIdx <= 1 ? 'SHIELDED · WAF VIRTUAL PATCH' : 'CONTAINED · ML ZERO-TRUST';
+      }
+      kevEl.innerHTML = `<span class="cve">${badgeTitle}</span><span class="vuln-title">Mitigated ${node.kev.id} [${node.kev.tech}]</span>`;
     }
   }
 
@@ -1010,13 +1018,17 @@ function traverseFromNode(node, depth) {
           return;
         }
 
-        // Scenario-driven defense containment check
-        const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
-        const baseProb = depth === 1 ? scn.p0 :
-                         depth === 2 ? scn.p1 :
-                         depth === 3 ? scn.p2 : 0;
-        const securityBonus = target.isSecurity ? 0.35 : 0;
-        const isDefended = Math.random() < Math.min(0.92, baseProb + securityBonus);
+        // Scenario-driven defense containment check:
+        // In Baseline (unmitigated), there are zero active defenses (0% containment)
+        let isDefended = false;
+        if (currentMode !== 'baseline') {
+          const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
+          const baseProb = depth === 1 ? scn.p0 :
+                           depth === 2 ? scn.p1 :
+                           depth === 3 ? scn.p2 : 0;
+          const securityBonus = target.isSecurity ? 0.25 : 0;
+          isDefended = Math.random() < Math.min(0.95, baseProb + securityBonus);
+        }
 
         if (isDefended) {
           triggerNodeDefense(target, wire);
