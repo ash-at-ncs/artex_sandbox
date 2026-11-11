@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ARTEX | Wire Diagram Simulation</title>
+<style>
+  :root {
+    --bg: #000000;
+    --turquoise: #00f0ff;
+    --turquoise-glow: rgba(0, 240, 255, 0.45);
+    --green: #00ff77;
+    --green-glow: rgba(0, 255, 119, 0.65);
+    --green-wire: rgba(0, 255, 119, 0.22);
+    --red: #ff2244;
+    --red-glow: rgba(255, 34, 68, 0.85);
+    --red-wire: #ff2244;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg);
+    color: #fff;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Segoe UI', Consolas, monospace;
+  }
+
+  /* Full screen canvas and graph viewport */
+  #viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at 50% 50%, #03080e 0%, #000000 100%);
+    overflow: hidden;
+  }
+
+  /* Faint background grid for circuit cyber aesthetic */
+  .circuit-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0, 255, 119, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 119, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* TOP HEADER - Strictly minimal: NEW RUN in turquoise with live outcome HUD */
+  .top-bar {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  #new-run-btn {
+    pointer-events: auto;
+    background: rgba(0, 30, 36, 0.85);
+    border: 1.5px solid var(--turquoise);
+    color: var(--turquoise);
+    padding: 10px 32px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 20px var(--turquoise-glow), inset 0 0 12px rgba(0, 240, 255, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #new-run-btn:hover {
+    background: var(--turquoise);
+    color: #001015;
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.85), inset 0 0 15px rgba(255, 255, 255, 0.7);
+    transform: scale(1.05);
+  }
+
+  #new-run-btn:active {
+    transform: scale(0.98);
+  }
+
+  #new-run-btn .run-icon {
+    font-size: 14px;
+    display: inline-block;
+    transition: transform 0.4s ease;
+  }
+
+  #new-run-btn:hover .run-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Live Outcome HUD under NEW RUN button */
+  #run-hud {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--turquoise);
+    background: rgba(0, 16, 22, 0.75);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    padding: 3px 14px;
+    border-radius: 3px;
+    backdrop-filter: blur(6px);
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+    transition: all 0.3s ease;
+  }
+  #run-hud.breached {
+    color: var(--red);
+    border-color: rgba(255, 34, 68, 0.4);
+    text-shadow: 0 0 8px rgba(255, 34, 68, 0.6);
+    background: rgba(26, 4, 8, 0.8);
+  }
+  #run-hud.contained {
+    color: #65d7a5;
+    border-color: rgba(101, 215, 165, 0.4);
+    text-shadow: 0 0 8px rgba(101, 215, 165, 0.6);
+    background: rgba(4, 20, 14, 0.8);
+  }
+
+  /* Discreet nav link to return to table view */
+  .back-link {
+    position: absolute;
+    top: 22px;
+    right: 28px;
+    pointer-events: auto;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 12px;
+    border-radius: 3px;
+    transition: all 0.2s;
+    z-index: 1000;
+  }
+  .back-link:hover {
+    color: var(--turquoise);
+    border-color: var(--turquoise);
+    background: rgba(0, 240, 255, 0.08);
+  }
+
+  /* SVG layer for wires and pulses */
+  #wire-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .wire {
+    fill: none;
+    stroke: var(--green-wire);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    transition: stroke 0.5s ease, stroke-width 0.4s ease, filter 0.4s ease, stroke-opacity 0.5s ease;
+  }
+
+  .wire.active-wire {
+    stroke: var(--green);
+    stroke-opacity: 0.7;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 4px var(--green));
+  }
+
+  .wire.hit-wire {
+    stroke: var(--red);
+    stroke-opacity: 0.95;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 6px var(--red-glow));
+    stroke-dasharray: none;
+  }
+
+  /* Traveling energy packet along wires */
+  .wire-packet {
+    fill: var(--red);
+    filter: drop-shadow(0 0 6px var(--red));
+  }
+
+  /* DOM Nodes Layer */
+  #nodes-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* Individual Node Container - Largish Icons */
+  .node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .node:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+    z-index: 100;
+  }
+
+  /* Node Icon Box - Largish */
+  .node-icon-wrapper {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Ambient glowing ring around icon */
+  .node-halo {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed var(--green);
+    opacity: 0.35;
+    transition: all 0.4s ease;
+    animation: rotateSlow 25s linear infinite;
+  }
+
+  @keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* The Icon itself using pure CSS Mask: white becomes transparent, icon glows in green */
+  .node-icon {
+    width: 38px;
+    height: 38px;
+    background-color: var(--green);
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    filter: drop-shadow(0 0 7px var(--green-glow));
+    transition: background-color 0.4s ease, filter 0.4s ease, transform 0.3s ease;
+  }
+
+  /* Node Label */
+  .node-label {
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--green);
+    text-shadow: 0 0 6px var(--green-glow);
+    white-space: nowrap;
+    text-align: center;
+    transition: color 0.4s ease, text-shadow 0.4s ease;
+  }
+
+  /* KEV Title underneath in RED */
+  .node-kev {
+    margin-top: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--red);
+    text-shadow: 0 0 8px var(--red-glow);
+    white-space: nowrap;
+    text-align: center;
+    background: rgba(45, 6, 12, 0.85);
+    border: 1px solid rgba(255, 34, 68, 0.55);
+    border-radius: 3px;
+    padding: 2px 6px;
+    opacity: 0;
+    transform: translateY(-4px) scale(0.9);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    box-shadow: 0 0 12px rgba(255, 34, 68, 0.3);
+  }
+
+  .node-kev .cve {
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+
+  .node-kev .vuln-title {
+    display: block;
+    font-size: 8.5px;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+
+  /* HIT STATE: Lit in RED, Red Glow */
+  .node.hit .node-icon {
+    background-color: var(--red);
+    filter: drop-shadow(0 0 14px var(--red-glow)) drop-shadow(0 0 24px var(--red));
+    transform: scale(1.1);
+  }
+
+  .node.hit .node-halo {
+    border-color: var(--red);
+    border-style: solid;
+    opacity: 0.85;
+    box-shadow: 0 0 15px var(--red-glow);
+    animation: hitPulse 1.2s ease-out infinite alternate;
+  }
+
+  .node.hit .node-label {
+    color: #ff8899;
+    text-shadow: 0 0 8px var(--red-glow);
+  }
+
+  .node.hit .node-kev {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* DEFENDED / BLOCKED STATE */
+  .node.defended .node-icon {
+    background-color: #f3bd64;
+    filter: drop-shadow(0 0 12px rgba(243, 189, 100, 0.8));
+    transform: scale(1.05);
+  }
+  .node.defended .node-halo {
+    border-color: #f3bd64;
+    border-style: double;
+    opacity: 0.85;
+    box-shadow: 0 0 12px rgba(243, 189, 100, 0.5);
+  }
+  .node.defended .node-label {
+    color: #f3bd64;
+    text-shadow: 0 0 6px rgba(243, 189, 100, 0.6);
+  }
+  .node.defended .node-kev {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    color: #f3bd64;
+    border-color: rgba(243, 189, 100, 0.6);
+    background: rgba(30, 22, 6, 0.88);
+    text-shadow: 0 0 8px rgba(243, 189, 100, 0.5);
+    box-shadow: 0 0 12px rgba(243, 189, 100, 0.3);
+  }
+
+  /* CROWN JEWEL DATA LAKE BREACH ALARM */
+  .node.breach-target .node-icon {
+    background-color: #ff003c;
+    filter: drop-shadow(0 0 20px #ff003c) drop-shadow(0 0 35px #ff003c);
+    animation: breachShake 0.4s ease infinite alternate;
+  }
+  .node.breach-target .node-kev {
+    border-color: #ff003c;
+    background: rgba(50, 0, 12, 0.95);
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.7);
+  }
+
+  @keyframes breachShake {
+    0% { transform: scale(1.15) rotate(-2deg); }
+    100% { transform: scale(1.18) rotate(2deg); }
+  }
+
+  .wire.defended-wire {
+    stroke: #765d34 !important;
+    stroke-opacity: 0.7 !important;
+    stroke-dasharray: 4 4 !important;
+  }
+
+  @keyframes hitPulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.25); opacity: 0.3; }
+  }
+
+  /* Flash impact burst when hit */
+  .impact-burst {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--red);
+    pointer-events: none;
+    animation: burstExpand 0.7s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+  }
+
+  @keyframes burstExpand {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(5.5); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div class="circuit-grid"></div>
+
+  <!-- Minimalist Top Bar: ONLY "NEW RUN" in turquoise + Live Outcome HUD -->
+  <div class="top-bar">
+    <button id="new-run-btn" title="Simulate a new organic attack run">
+      <span class="run-icon">↻</span>
+      <span>NEW RUN</span>
+    </button>
+    <div id="run-hud">INITIALIZING WIRE TOPOLOGY...</div>
+  </div>
+
+  <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗</a>
+
+  <!-- Fullscreen SVG for wires & pulses -->
+  <svg id="wire-svg"></svg>
+
+  <!-- HTML nodes layer for GPU accelerated icon masking and text -->
+  <div id="nodes-layer"></div>
+</div>
+
+<script>
+// Catalog of all 30 transparent icons
+const ICON_BASE = 'assets/diagram-icons/transparent/';
+
+// Ground-truth CISA KEV mappings strictly partitioned by architecture layer
+const LAYER_KEVS = [
+  // Layer 0: Perimeter & Cloud Ingress
+  [
+    { id: 'CVE-2024-4577', title: 'PHP CGI Arg Injection RCE', tech: 'T1190' },
+    { id: 'CVE-2023-46805', title: 'Ivanti Connect Secure Auth Bypass', tech: 'T1190' },
+    { id: 'CVE-2024-3400', title: 'PAN-OS Command Injection RCE', tech: 'T1190' },
+    { id: 'CVE-2023-3519', title: 'Citrix NetScaler ADC Unauth RCE', tech: 'T1190' },
+    { id: 'CVE-2023-20198', title: 'Cisco IOS XE Priv Escalation', tech: 'T1068' },
+    { id: 'CVE-2024-21887', title: 'Ivanti Connect Policy Injection', tech: 'T1059' }
+  ],
+  // Layer 1: API Gateways & Access Control
+  [
+    { id: 'CVE-2023-22515', title: 'Confluence Broken Access Control', tech: 'T1068' },
+    { id: 'CVE-2024-27198', title: 'TeamCity Admin Token Minting', tech: 'T1552' },
+    { id: 'CVE-2023-38035', title: 'Ivanti Sentry API Auth Bypass', tech: 'T1068' },
+    { id: 'CVE-2023-4966', title: 'Citrix Bleed Session Leak', tech: 'T1552' },
+    { id: 'CVE-2024-1709', title: 'ScreenConnect Auth Bypass', tech: 'T1068' },
+    { id: 'CVE-2021-26855', title: 'ProxyLogon Exchange SSRF', tech: 'T1190' }
+  ],
+  // Layer 2: Microservices Mesh & Applications
+  [
+    { id: 'CVE-2021-44228', title: 'Log4Shell JNDI Remote Code Execution', tech: 'T1059' },
+    { id: 'CVE-2023-22527', title: 'Confluence OGNL Template Injection', tech: 'T1059' },
+    { id: 'CVE-2022-22965', title: 'Spring4Shell Data Binding RCE', tech: 'T1190' },
+    { id: 'CVE-2022-29464', title: 'WSO2 API Arbitrary File Upload', tech: 'T1505' },
+    { id: 'CVE-2023-2868', title: 'Barracuda ESG Command Injection', tech: 'T1059' },
+    { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' }
+  ],
+  // Layer 3: Data Lakes & Clustered Databases
+  [
+    { id: 'CVE-2023-34362', title: 'MOVEit Transfer SQLi Exfiltration', tech: 'T1041' },
+    { id: 'CVE-2023-27350', title: 'PaperCut Setup Wizard Database Dump', tech: 'T1041' },
+    { id: 'CVE-2020-1472', title: 'Zerologon Cryptographic Hash Dump', tech: 'T1003' },
+    { id: 'CVE-2023-36884', title: 'Office HTML Document Exfiltration', tech: 'T1041' }
+  ]
+];
+
+// Architectural Layer Definitions: Backend Clustered Databases
+const LAYER_CONFIG = [
+  {
+    name: '01 / Cloud Ingress',
+    xBand: [0.08, 0.22],
+    clusters: [
+      {
+        name: 'AWS Ingress',
+        nodes: [
+          { id: 'aws-cloud', label: 'AWS Public Cloud', icon: 'public-cloud.png' },
+          { id: 'aws-infra', label: 'AWS Infra Mesh', icon: 'cloud-infrastructure.png' },
+          { id: 'aws-vpn', label: 'AWS Client VPN', icon: 'remote-access.png' }
+        ]
+      },
+      {
+        name: 'Azure Enterprise',
+        nodes: [
+          { id: 'az-cloud', label: 'Azure Cloud', icon: 'public-cloud.png' },
+          { id: 'az-net', label: 'ExpressRoute Net', icon: 'network.png' },
+          { id: 'az-branch', label: 'Branch Gateway', icon: 'branch.png' }
+        ]
+      },
+      {
+        name: 'GCP & Partners',
+        nodes: [
+          { id: 'gcp-infra', label: 'GCP Compute Mesh', icon: 'cloud-infrastructure.png' },
+          { id: 'partner-gw', label: 'B2B Partner Link', icon: 'partners.png' },
+          { id: 'ext-surface', label: 'External Attack Surface', icon: 'attack-surface.png' }
+        ]
+      }
+    ]
+  },
+  {
+    name: '02 / Gateways & Auth',
+    xBand: [0.32, 0.46],
+    clusters: [
+      {
+        name: 'API Gateways',
+        nodes: [
+          { id: 'cust-api', label: 'Customer REST Gateway', icon: 'api.png' },
+          { id: 'partner-api', label: 'Partner GraphQL API', icon: 'api.png' },
+          { id: 'waf-proxy', label: 'Edge Reverse Proxy', icon: 'server-infrastructure.png', isSecurity: true }
+        ]
+      },
+      {
+        name: 'Identity & Access',
+        nodes: [
+          { id: 'iam-idp', label: 'OAuth2 / Okta IdP', icon: 'identity.png' },
+          { id: 'vault-creds', label: 'Vault Configuration', icon: 'configuration.png', isSecurity: true },
+          { id: 'sentry-auth', label: 'Ivanti Sentry GW', icon: 'endpoint.png' }
+        ]
+      },
+      {
+        name: 'Boundary Controls',
+        nodes: [
+          { id: 'threat-det', label: 'WAF Threat Detection', icon: 'threat-detection.png', isSecurity: true },
+          { id: 'soc-sensor', label: 'Perimeter SOC Telemetry', icon: 'soc.png', isSecurity: true }
+        ]
+      }
+    ]
+  },
+  {
+    name: '03 / Services Mesh',
+    xBand: [0.54, 0.70],
+    clusters: [
+      {
+        name: 'Core Applications',
+        nodes: [
+          { id: 'app-engine', label: 'App Engine Cluster', icon: 'application.png' },
+          { id: 'comp-registry', label: 'Container Registry', icon: 'components.png' },
+          { id: 'cicd-runner', label: 'CI/CD Automated Pipeline', icon: 'cicd.png' }
+        ]
+      },
+      {
+        name: 'Internal Microservices',
+        nodes: [
+          { id: 'log4j-svc', label: 'Log4j Logging Service', icon: 'server-infrastructure.png' },
+          { id: 'spring-svc', label: 'Spring Boot Broker', icon: 'application.png' },
+          { id: 'confluence-node', label: 'Internal Confluence', icon: 'server-infrastructure.png' }
+        ]
+      },
+      {
+        name: 'AI & Operations',
+        nodes: [
+          { id: 'ai-core', label: 'Predictive AI Core', icon: 'ai.png' },
+          { id: 'iot-hub', label: 'Telemetry IoT Ingestion', icon: 'iot.png' },
+          { id: 'vuln-scan', label: 'Vulnerability Scanner', icon: 'vulnerability-management.png', isSecurity: true }
+        ]
+      }
+    ]
+  },
+  {
+    name: '04 / Backend Databases',
+    xBand: [0.78, 0.92],
+    clusters: [
+      {
+        name: 'Database Cluster: Customer',
+        nodes: [
+          { id: 'lake-cust', label: 'Customer Lake S3', icon: 'data.png', isLake: true, isDb: true },
+          { id: 'db-rds', label: 'Customer SQL RDS', icon: 'server-infrastructure.png', isLake: true, isDb: true },
+          { id: 'moveit-sftp', label: 'MOVEit SFTP Data', icon: 'server-infrastructure.png', isLake: true, isDb: true }
+        ]
+      },
+      {
+        name: 'Database Cluster: Analytics',
+        nodes: [
+          { id: 'lake-ops', label: 'Operational Analytics', icon: 'data.png', isLake: true, isDb: true },
+          { id: 'nosql-doc', label: 'NoSQL Document Store', icon: 'server-infrastructure.png', isLake: true, isDb: true },
+          { id: 'dc-vault', label: 'Core SAN Storage', icon: 'data-center.png', isLake: true, isDb: true }
+        ]
+      }
+    ]
+  }
+];
+
+let currentNodes = [];
+let currentWires = [];
+let isSimulating = false;
+let runCount = 0;
+let runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
+let inFlightOperations = 0;
+let layerHits = [0, 0, 0, 0];
+
+const rand = (min, max) => Math.random() * (max - min) + min;
+const randInt = (min, max) => Math.floor(rand(min, max + 1));
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+const viewport = document.getElementById('viewport');
+const svg = document.getElementById('wire-svg');
+const nodesLayer = document.getElementById('nodes-layer');
+const newRunBtn = document.getElementById('new-run-btn');
+const runHud = document.getElementById('run-hud');
+
+/**
+ * Organic layout with curved lines and largish icons (Commit 1 version)
+ */
+function layoutGraph() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  currentNodes = [];
+  currentWires = [];
+  nodesLayer.innerHTML = '';
+  svg.innerHTML = '';
+
+  LAYER_CONFIG.forEach((layer, layerIdx) => {
+    const numClusters = layer.clusters.length;
+    const clusterHeight = (h * 0.76) / numClusters;
+    const startY = h * 0.13;
+    const layerKevPool = shuffle(LAYER_KEVS[layerIdx]);
+    let kevIdx = 0;
+
+    layer.clusters.forEach((cluster, clusterIdx) => {
+      const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.04, h * 0.04);
+      const clusterCenterX = w * (layer.xBand[0] + (layer.xBand[1] - layer.xBand[0]) * 0.5) + rand(-w * 0.025, w * 0.025);
+
+      const numNodes = cluster.nodes.length;
+      cluster.nodes.forEach((rawNode, nodeIdx) => {
+        const angle = (nodeIdx / numNodes) * Math.PI * 2 + rand(-0.35, 0.35);
+        const radiusX = rand(w * 0.025, w * 0.065);
+        const radiusY = rand(h * 0.045, clusterHeight * 0.42);
+
+        const nx = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(angle) * radiusX + rand(-15, 15)));
+        const ny = Math.max(h * 0.11, Math.min(h * 0.90, clusterCenterY + Math.sin(angle) * radiusY + rand(-15, 15)));
+
+        const kev = layerKevPool[kevIdx % layerKevPool.length];
+        kevIdx++;
+
+        const node = {
+          id: rawNode.id,
+          label: rawNode.label,
+          icon: rawNode.icon,
+          isSecurity: !!rawNode.isSecurity,
+          isLake: !!rawNode.isLake,
+          isDb: !!rawNode.isDb,
+          layerIdx: layerIdx,
+          clusterName: cluster.name,
+          x: nx,
+          y: ny,
+          kev: kev,
+          hit: false,
+          defended: false,
+          downstream: [],
+          el: null
+        };
+
+        currentNodes.push(node);
+      });
+    });
+  });
+
+  // Wires between layers
+  currentNodes.forEach(source => {
+    if (source.layerIdx < LAYER_CONFIG.length - 1) {
+      const nextLayerNodes = currentNodes.filter(n => n.layerIdx === source.layerIdx + 1);
+      const sortedCandidates = [...nextLayerNodes].sort((a, b) => Math.abs(a.y - source.y) - Math.abs(b.y - source.y));
+
+      const numConn = randInt(1, Math.min(2, sortedCandidates.length));
+      for (let i = 0; i < numConn; i++) {
+        const pickIdx = Math.min(sortedCandidates.length - 1, Math.floor(Math.pow(Math.random(), 1.5) * sortedCandidates.length));
+        const target = sortedCandidates[pickIdx];
+        if (target && !source.downstream.includes(target.id)) {
+          source.downstream.push(target.id);
+          createWire(source, target);
+        }
+      }
+    }
+  });
+
+  // Ensure every node has ingress
+  currentNodes.forEach(target => {
+    if (target.layerIdx > 0) {
+      const hasUpstream = currentWires.some(w => w.target.id === target.id);
+      if (!hasUpstream) {
+        const prevLayerNodes = currentNodes.filter(n => n.layerIdx === target.layerIdx - 1);
+        if (prevLayerNodes.length > 0) {
+          const source = prevLayerNodes.reduce((closest, curr) => 
+            Math.abs(curr.y - target.y) < Math.abs(closest.y - target.y) ? curr : closest
+          );
+          source.downstream.push(target.id);
+          createWire(source, target);
+        }
+      }
+    }
+  });
+
+  // Render DOM Nodes with Largish Icons
+  currentNodes.forEach(node => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.id = 'node-' + node.id;
+    el.style.left = `${node.x}px`;
+    el.style.top = `${node.y}px`;
+
+    el.innerHTML = `
+      <div class="node-icon-wrapper">
+        <div class="node-halo"></div>
+        <div class="node-icon" style="-webkit-mask-image: url('${ICON_BASE}${node.icon}'); mask-image: url('${ICON_BASE}${node.icon}');"></div>
+      </div>
+      <div class="node-label">${node.label}</div>
+      <div class="node-kev">
+        <span class="cve">${node.kev.id}</span>
+        <span class="vuln-title">${node.kev.title}</span>
+      </div>
+    `;
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerNodeHit(node);
+    });
+
+    nodesLayer.appendChild(el);
+    node.el = el;
+  });
+}
+
+/**
+ * Curved lines between clusters (Commit 1 version)
+ */
+function createWire(source, target) {
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('class', 'wire');
+
+  const dx = target.x - source.x;
+  const p1x = source.x + dx * 0.5 + rand(-15, 15);
+  const p1y = source.y + rand(-10, 10);
+  const p2x = source.x + dx * 0.5 + rand(-15, 15);
+  const p2y = target.y + rand(-10, 10);
+
+  const d = `M ${source.x} ${source.y} C ${p1x} ${p1y}, ${p2x} ${p2y}, ${target.x} ${target.y}`;
+  path.setAttribute('d', d);
+
+  svg.appendChild(path);
+
+  currentWires.push({
+    source,
+    target,
+    path,
+    hit: false,
+    defended: false
+  });
+}
+
+function triggerNodeHit(node, isExfil = false, customKev = null) {
+  if (node.hit || node.defended) return;
+  node.hit = true;
+  runStats.hits++;
+
+  if (node.el) {
+    node.el.classList.add('hit');
+    if (isExfil || node.isLake || node.isDb) {
+      node.el.classList.add('breach-target');
+      runStats.lakesBreached++;
+      const kevEl = node.el.querySelector('.node-kev');
+      if (kevEl) {
+        const vulnText = customKev ? `${customKev.id} · ${customKev.title}` : `${node.kev.id} · ${node.kev.title}`;
+        kevEl.innerHTML = `<span class="cve">CANARY_TOKEN EXFILTRATED</span><span class="vuln-title">${vulnText}</span>`;
+      }
+    }
+
+    const burst = document.createElement('div');
+    burst.className = 'impact-burst';
+    burst.style.left = `${node.x}px`;
+    burst.style.top = `${node.y}px`;
+    nodesLayer.appendChild(burst);
+    setTimeout(() => burst.remove(), 700);
+  }
+}
+
+function triggerNodeDefense(node, wire) {
+  if (node.hit || node.defended) return;
+  node.defended = true;
+  runStats.blocks++;
+
+  if (node.el) {
+    node.el.classList.add('defended');
+    const kevEl = node.el.querySelector('.node-kev');
+    if (kevEl) {
+      kevEl.innerHTML = `<span class="cve">SHIELDED · WAF VIRTUAL PATCH</span><span class="vuln-title">Mitigated ${node.kev.id} [${node.kev.tech}]</span>`;
+    }
+  }
+
+  if (wire) {
+    wire.defended = true;
+    wire.path.classList.add('defended-wire');
+  }
+}
+
+function animateWirePulse(wire, onComplete) {
+  const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  pulse.setAttribute('r', '4');
+  pulse.setAttribute('class', 'wire-packet');
+  svg.appendChild(pulse);
+
+  wire.path.classList.add('active-wire');
+
+  const pathEl = wire.path;
+  const totalLength = pathEl.getTotalLength();
+  const duration = rand(400, 750);
+  const startTime = performance.now();
+
+  function step(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const point = pathEl.getPointAtLength(progress * totalLength);
+
+    pulse.setAttribute('cx', point.x);
+    pulse.setAttribute('cy', point.y);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      pulse.remove();
+      wire.path.classList.remove('active-wire');
+      if (onComplete) onComplete();
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function startSimulation() {
+  isSimulating = true;
+  runCount++;
+  runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
+  inFlightOperations = 0;
+  layerHits = [0, 0, 0, 0];
+
+  runHud.className = '';
+  runHud.textContent = `RUN #${String(runCount).padStart(2, '0')} · TRAVERSING PERIMETER INGRESS...`;
+
+  layoutGraph();
+
+  // 1-2 ingress nodes
+  const ingressNodes = currentNodes.filter(n => n.layerIdx === 0);
+  const startCount = randInt(1, 2);
+  const startNodes = shuffle(ingressNodes).slice(0, startCount);
+
+  startNodes.forEach((startNode, i) => {
+    inFlightOperations++;
+    setTimeout(() => {
+      triggerNodeHit(startNode);
+      layerHits[0]++;
+      traverseFromNode(startNode, 1);
+      decrementInFlight();
+    }, 250 + i * 350);
+  });
+}
+
+function traverseFromNode(node, depth) {
+  if (depth > 3) return;
+  if (layerHits[depth] >= 3) return;
+
+  const outgoingWires = currentWires.filter(w => w.source.id === node.id && !w.target.hit && !w.target.defended);
+  if (outgoingWires.length === 0) return;
+
+  const remainingBudget = 3 - layerHits[depth];
+  if (remainingBudget <= 0) return;
+
+  const chainCount = Math.min(remainingBudget, randInt(1, 2));
+  const selectedWires = shuffle(outgoingWires).slice(0, chainCount);
+
+  selectedWires.forEach((wire, idx) => {
+    inFlightOperations++;
+    const wireDelay = rand(300, 600) + idx * 200;
+    setTimeout(() => {
+      animateWirePulse(wire, () => {
+        const target = wire.target;
+        if (target.hit || target.defended) {
+          decrementInFlight();
+          return;
+        }
+
+        const isDefended = (target.isSecurity && Math.random() < 0.65) || (depth === 2 && Math.random() < 0.28);
+
+        if (isDefended) {
+          triggerNodeDefense(target, wire);
+          decrementInFlight();
+        } else {
+          if (layerHits[depth] < 3) {
+            layerHits[depth]++;
+            wire.hit = true;
+            wire.path.classList.add('hit-wire');
+            const isFinalLake = target.layerIdx === 3;
+            triggerNodeHit(target, isFinalLake);
+
+            // Backend Database Clustered Compromise:
+            // "at the backend there might be a few databases clustered and 1 or 2 get hacked by a given vuln, up to 3."
+            if (isFinalLake && target.isDb) {
+              const clusterPeers = currentNodes.filter(n => 
+                n.layerIdx === 3 && n.clusterName === target.clusterName && n.id !== target.id && !n.hit && !n.defended
+              );
+              const extraDbCount = Math.min(randInt(1, 2), 3 - layerHits[3]);
+              if (extraDbCount > 0 && clusterPeers.length > 0) {
+                const victims = shuffle(clusterPeers).slice(0, extraDbCount);
+                victims.forEach((vic, vIdx) => {
+                  setTimeout(() => {
+                    layerHits[3]++;
+                    triggerNodeHit(vic, true, target.kev);
+                  }, 280 + vIdx * 200);
+                });
+              }
+            }
+
+            if (!isFinalLake) {
+              traverseFromNode(target, depth + 1);
+            }
+          }
+          decrementInFlight();
+        }
+      });
+    }, wireDelay);
+  });
+}
+
+function decrementInFlight() {
+  inFlightOperations = Math.max(0, inFlightOperations - 1);
+  if (inFlightOperations === 0) {
+    finalizeSimulation();
+  }
+}
+
+function finalizeSimulation() {
+  isSimulating = false;
+  if (runStats.lakesBreached > 0) {
+    runHud.className = 'breached';
+    runHud.textContent = `RUN #${String(runCount).padStart(2, '0')} COMPLETE · ${runStats.hits} KEVs EXPLOITED · ${runStats.blocks} CONTAINED · DATABASE CLUSTER BREACH DETECTED [CANARY_ALPHA_7739]`;
+  } else {
+    runHud.className = 'contained';
+    runHud.textContent = `RUN #${String(runCount).padStart(2, '0')} COMPLETE · ${runStats.blocks} BLOCKED AT BOUNDARY · ZERO-TRUST ARCHITECTURE PROTECTED DATA LAKES`;
+  }
+
+  if (window._onSimulationDone) {
+    window._onSimulationDone({
+      run: runCount,
+      hits: runStats.hits,
+      blocks: runStats.blocks,
+      lakesBreached: runStats.lakesBreached,
+      status: runStats.lakesBreached > 0 ? 'BREACHED' : 'CONTAINED'
+    });
+  }
+}
+
+newRunBtn.addEventListener('click', () => {
+  startSimulation();
+});
+
+window.addEventListener('resize', () => {
+  layoutGraph();
+});
+
+window.addEventListener('load', () => {
+  startSimulation();
+});
+</script>
+</body>
+</html>
