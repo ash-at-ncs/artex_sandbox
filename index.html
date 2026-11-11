@@ -2,55 +2,369 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ARTEX | Range Operations</title>
+<title>ARTEX | Range Operations & CISA KEV Simulation</title>
 <style>
-:root{color-scheme:dark;--bg:#090e17;--panel:#101824;--line:#263344;--muted:#8998aa;--text:#e6edf5;--cyan:#58d9db;--red:#ff6d79;--amber:#f3bd64;--green:#65d7a5}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 Inter,Segoe UI,sans-serif}header,.bar,.section-head,.row,.legend{display:flex;align-items:center;justify-content:space-between;gap:12px}header{padding:14px 24px;border-bottom:1px solid var(--line)}h1{font-size:17px;letter-spacing:.12em;margin:0}h1 span{color:var(--cyan)}.sub,.muted{color:var(--muted)}.sub{font-size:11px;letter-spacing:.08em;text-transform:uppercase}.pill,.tag{border:1px solid var(--line);border-radius:4px;padding:3px 7px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.pill{color:var(--amber);border-color:#765d34}main{max-width:1600px;margin:auto;padding:16px 24px}.bar{flex-wrap:wrap;margin-bottom:14px}.controls{display:flex;gap:6px;flex-wrap:wrap}button{font:inherit;cursor:pointer;color:var(--muted);background:#111c2a;border:1px solid var(--line);border-radius:4px;padding:7px 12px}button:hover,button:focus-visible{border-color:var(--cyan);color:white}button.selected{background:#173339;color:var(--cyan);border-color:#397b7d}button.primary{background:var(--cyan);color:#07171b;border-color:var(--cyan);font-weight:700}.stats{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--line);background:var(--panel);margin-bottom:14px}.stat{padding:10px 14px;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat strong{display:block;font-size:21px;line-height:1.2}.stat span,.label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:14px}.panel{background:var(--panel);border:1px solid var(--line);min-width:0}.section-head{padding:11px 14px;border-bottom:1px solid var(--line)}h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;margin:0}.estate{padding:12px 14px}.cloud{display:grid;grid-template-columns:95px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #202d3d}.cloud-name{font-weight:700}.cloud-name small{display:block;color:var(--muted);font-weight:400}.gateways{display:grid;grid-template-columns:1fr 1fr;gap:7px}.gateway{display:flex;justify-content:space-between;gap:6px;padding:7px 9px;background:#172434;border-left:2px solid #496178}.gateway.active{border-color:var(--cyan);color:var(--cyan)}.gateway.blocked{border-color:var(--green);color:var(--green)}.services{padding:12px 0}.dots{display:grid;grid-template-columns:repeat(40,1fr);gap:3px;margin:8px 0}.dot{height:5px;background:#35485d;border-radius:1px}.dot.active{background:var(--cyan)}.dot.risk{background:var(--red)}.dot.safe{background:var(--green)}.assets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.asset{padding:8px 10px;background:#172434;border-left:2px solid #6882a0}.asset b{display:block}.asset small{color:var(--muted)}.regimes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.regimes .tag{color:#c3ceda}.right{display:grid;grid-template-rows:auto 1fr;gap:14px}.agents{padding:12px 14px}.agent-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:10px 0}.agent{height:19px;border:1px solid #34465a;background:#1a2939;border-radius:2px}.agent.running{background:#1b626b;border-color:var(--cyan)}.agent.blocked{background:#1c5648;border-color:var(--green)}.agent.reached{background:#70343e;border-color:var(--red)}.legend{justify-content:flex-start;flex-wrap:wrap;color:var(--muted);font-size:10px}.key{display:inline-block;width:7px;height:7px;margin-right:4px;background:var(--cyan)}.feed{height:260px;overflow:auto;font:11px/1.6 Consolas,monospace;padding:8px 14px}.event{display:grid;grid-template-columns:54px 42px 1fr auto;gap:8px;padding:4px 0;border-bottom:1px solid #1c2937}.event time,.event .id{color:var(--muted)}.good{color:var(--green)}.bad{color:var(--red)}.info{color:var(--cyan)}footer{color:var(--muted);font-size:11px;margin-top:12px}footer a{color:var(--cyan)}@media(max-width:900px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.stat:nth-child(3){border-right:0}.stat:nth-child(-n+3){border-bottom:1px solid var(--line)}}@media(max-width:520px){header,main{padding-left:12px;padding-right:12px}.cloud{grid-template-columns:1fr}.dots{grid-template-columns:repeat(20,1fr)}.agent-grid{grid-template-columns:repeat(9,1fr)}.event{grid-template-columns:42px 35px 1fr}.event span:last-child{display:none}.stats{grid-template-columns:repeat(2,1fr)}.stat:nth-child(3){border-right:1px solid var(--line)}.stat:nth-child(even){border-right:0}.stat:nth-child(4){border-bottom:1px solid var(--line)}}
-.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}.stage{position:relative;background:#172434;border-top:2px solid #43566a;padding:9px;min-width:0}.stage.active{border-color:var(--cyan)}.stage.done{border-color:var(--green)}.stage strong{display:block;font-size:12px}.stage small{display:block;color:var(--muted);margin-top:4px}.stage .findings{color:var(--amber);font-size:11px;margin-top:6px}.stage:not(:last-child):after{content:'→';position:absolute;right:-9px;top:15px;color:var(--cyan);z-index:1}.progress{height:3px;background:#26394a;margin-top:8px}.progress i{display:block;height:100%;width:0;background:var(--cyan);transition:width .2s}.stage.done .progress i{background:var(--green)}@media(max-width:520px){.flow{grid-template-columns:1fr 1fr}.stage:nth-child(2):after{content:''}}
+:root{color-scheme:dark;--bg:#090e17;--panel:#101824;--line:#263344;--muted:#8998aa;--text:#e6edf5;--cyan:#58d9db;--red:#ff6d79;--amber:#f3bd64;--green:#65d7a5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 Inter,Segoe UI,sans-serif}
+header,.bar,.section-head,.row,.legend{display:flex;align-items:center;justify-content:space-between;gap:12px}
+header{padding:14px 24px;border-bottom:1px solid var(--line)}
+h1{font-size:17px;letter-spacing:.12em;margin:0}h1 span{color:var(--cyan)}
+.sub,.muted{color:var(--muted)}.sub{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.pill,.tag{border:1px solid var(--line);border-radius:4px;padding:3px 7px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.pill{color:var(--amber);border-color:#765d34}
+main{max-width:1600px;margin:auto;padding:16px 24px}
+.bar{flex-wrap:wrap;margin-bottom:14px}
+.controls{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;color:var(--muted);background:#111c2a;border:1px solid var(--line);border-radius:4px;padding:7px 12px;transition:all .15s}
+button:hover,button:focus-visible{border-color:var(--cyan);color:white}
+button.selected{background:#173339;color:var(--cyan);border-color:#397b7d}
+button.primary{background:var(--cyan);color:#07171b;border-color:var(--cyan);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--line);background:var(--panel);margin-bottom:14px}
+.stat{padding:10px 14px;border-right:1px solid var(--line)}.stat:last-child{border:0}
+.stat strong{display:block;font-size:21px;line-height:1.2}
+.stat span,.label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);min-width:0}
+.section-head{padding:11px 14px;border-bottom:1px solid var(--line)}
+h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;margin:0}
+.estate{padding:12px 14px}
+.cloud{display:grid;grid-template-columns:95px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #202d3d}
+.cloud-name{font-weight:700}.cloud-name small{display:block;color:var(--muted);font-weight:400}
+.gateways{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.gateway{display:flex;justify-content:space-between;gap:6px;padding:7px 9px;background:#172434;border-left:2px solid #496178}
+.gateway.active{border-color:var(--cyan);color:var(--cyan)}.gateway.blocked{border-color:var(--green);color:var(--green)}
+.services{padding:12px 0}
+.dots{display:grid;grid-template-columns:repeat(40,1fr);gap:3px;margin:8px 0}
+.dot{height:5px;background:#35485d;border-radius:1px}.dot.active{background:var(--cyan)}.dot.risk{background:var(--red)}.dot.safe{background:var(--green)}
+.assets{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.asset{padding:8px 10px;background:#172434;border-left:2px solid #6882a0}
+.asset b{display:block}.asset small{color:var(--muted)}
+.regimes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.regimes .tag{color:#c3ceda}
+.right{display:grid;grid-template-rows:auto 1fr;gap:14px}
+.agents{padding:12px 14px}
+.agent-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:10px 0}
+.agent{height:19px;border:1px solid #34465a;background:#1a2939;border-radius:2px}
+.agent.running{background:#1b626b;border-color:var(--cyan)}
+.agent.blocked{background:#1c5648;border-color:var(--green)}
+.agent.reached{background:#70343e;border-color:var(--red)}
+.legend{justify-content:flex-start;flex-wrap:wrap;color:var(--muted);font-size:10px}
+.key{display:inline-block;width:7px;height:7px;margin-right:4px;background:var(--cyan)}
+.feed{height:280px;overflow:auto;font:11px/1.6 Consolas,monospace;padding:8px 14px}
+.event{display:grid;grid-template-columns:54px 42px 1fr auto;gap:8px;padding:4px 0;border-bottom:1px solid #1c2937}
+.event time,.event .id{color:var(--muted)}.good{color:var(--green)}.bad{color:var(--red)}.info{color:var(--cyan)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:#0d141e}
+.stage{border:1px solid var(--line);background:#131c28;padding:10px 12px;border-radius:4px;position:relative;overflow:hidden}
+.stage strong{display:block;font-size:13px;margin:2px 0 4px}
+.stage .findings{font-size:11px;color:var(--muted);margin-bottom:6px}
+.stage-state{font-size:10px;text-transform:uppercase;color:var(--amber)}
+.stage .progress{height:3px;background:#202e3f;border-radius:1px;margin-top:6px;overflow:hidden}
+.stage .progress i{display:block;height:100%;background:var(--cyan);width:0%;transition:width .2s}
+.stage.active{border-color:var(--cyan)}.stage.done{border-color:#3d5672}
+.stage.active .stage-state{color:var(--cyan)}.stage.done .stage-state{color:var(--green)}
+.kev-badges{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
+.kev-badge{font-size:9px;background:#17283c;color:#58d9db;border:1px solid #2e4a66;border-radius:3px;padding:1px 5px;font-family:Consolas,monospace;cursor:pointer;transition:all .15s}
+.kev-badge:hover{background:var(--cyan);color:#07171b}
+.stage.done .kev-badge{border-color:#48637f;color:#9bb7d4;background:#1c2938}
+.kev-table-panel{margin-top:14px;background:var(--panel);border:1px solid var(--line)}
+.kev-table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}
+.kev-table th{background:#131d2a;padding:8px 12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--line)}
+.kev-table td{padding:8px 12px;border-bottom:1px solid #1c2a38;color:var(--text)}
+.kev-table tr:hover{background:#152233}
+.cve-id{font-family:Consolas,monospace;font-weight:700;color:var(--cyan)}
+.badge-cvss{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700}
+.cvss-crit{background:#541c23;color:#ff6d79;border:1px solid #8e2b36}
+.cvss-high{background:#4d3215;color:#f3bd64;border:1px solid #7d5220}
+footer{color:var(--muted);font-size:11px;margin-top:14px}footer a{color:var(--cyan)}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.flow{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<header><div><h1><span>ARTEX</span> / RANGE OPERATIONS</h1><div class="sub">Autonomous attack & defense simulation</div></div><span class="pill">Illustrative simulation</span></header>
+<header><div><h1><span>ARTEX</span> / RANGE OPERATIONS</h1><div class="sub">Autonomous attack & agentic defense simulation · CISA KEV Mapping</div></div><span class="pill">CISA KEV + ATT&CK Integrated</span></header>
 <main>
-<div class="bar"><div class="controls" role="group" aria-label="Defense scenario"><button class="selected" data-mode="baseline">Baseline</button><button data-mode="patch">Virtual patch</button><button data-mode="defender">Behavioral defense</button><button data-mode="combined">Combined</button></div><div class="controls"><span id="status" class="muted" aria-live="polite">Ready to simulate</span><span id="elapsed" class="tag">00.0s</span><button id="run" class="primary">▶ Run simulation</button></div></div>
-<div class="stats"><div class="stat"><strong>36</strong><span>Parallel agents</span></div><div class="stat"><strong>6</strong><span>API gateways</span></div><div class="stat"><strong>240</strong><span>Services modeled</span></div><div class="stat"><strong>3</strong><span>Cloud providers</span></div><div class="stat"><strong>2</strong><span>Data lakes</span></div><div class="stat"><strong id="outcome">—</strong><span>Paths reaching data</span></div></div>
-<div class="layout"><section class="panel"><div class="section-head"><h2>Enterprise estate</h2><span class="muted">3 clouds · 6 gateways · 240 services</span></div><div class="flow" id="flow" aria-label="Simulated attack flow"></div><div class="estate"><div id="clouds"></div><div class="services"><div class="row"><span class="label">Service landscape</span><span class="muted">Each mark represents 2 services</span></div><div class="dots" id="dots" aria-label="240 simulated services"></div></div><div class="label">Data destinations</div><div class="assets"><div class="asset"><b>Lake 01 / Customer</b><small>AWS · sensitive records</small></div><div class="asset"><b>Lake 02 / Analytics</b><small>Azure · operational data</small></div></div><div class="regimes"><span class="label">Access regimes</span><span class="tag">Role-based</span><span class="tag">Attribute-based</span><span class="tag">Policy-based</span></div></div></section>
-<div class="right"><section class="panel"><div class="section-head"><h2>Agent activity</h2><span id="agent-count" class="muted">0 / 36 active</span></div><div class="agents"><div class="row"><span class="label">Concurrent query lanes</span><span class="muted">36 independent paths</span></div><div id="agents" class="agent-grid" aria-label="36 simulated agent lanes"></div><div class="legend"><span><i class="key"></i>Active</span><span><i class="key" style="background:var(--green)"></i>Blocked</span><span><i class="key" style="background:var(--red)"></i>Data reached</span><span><i class="key" style="background:#35485d"></i>Idle</span></div></div></section><section class="panel"><div class="section-head"><h2>Activity stream</h2><span class="muted">Simulated events</span></div><div id="feed" class="feed" role="log" aria-label="Simulation activity"><div class="muted">Select a defense posture and run the simulation.</div></div></section></div></div>
-<footer>Illustrative estate, timings and KEV findings; this page does not launch agents, query a KEV catalog or connect to cloud services. The local lab models a smaller four-service chain. <a href="README.md">Lab documentation ↗</a></footer>
+<div class="bar">
+  <div class="controls" role="group" aria-label="Defense scenario">
+    <button class="selected" data-mode="baseline">Baseline (Unmitigated)</button>
+    <button data-mode="patch">Virtual patch (WAF)</button>
+    <button data-mode="defender">Behavioral defense (ML)</button>
+    <button data-mode="combined">Combined defense-in-depth</button>
+  </div>
+  <div class="controls">
+    <span id="status" class="muted" aria-live="polite">Ready to simulate</span>
+    <span id="elapsed" class="tag">00.0s</span>
+    <button id="run" class="primary">▶ Run simulation</button>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><strong>36</strong><span>Parallel agents</span></div>
+  <div class="stat"><strong>6</strong><span>API gateways</span></div>
+  <div class="stat"><strong>12</strong><span>CISA KEVs Mapped</span></div>
+  <div class="stat"><strong>3</strong><span>Cloud providers</span></div>
+  <div class="stat"><strong>2</strong><span>Data lakes</span></div>
+  <div class="stat"><strong id="outcome">—</strong><span>Paths reaching data</span></div>
+</div>
+
+<div class="layout">
+  <section class="panel">
+    <div class="section-head"><h2>Autonomous Attack Traversal Path (4 Layers)</h2><span class="muted">Mapped to CISA KEVs & CTID MITRE ATT&CK</span></div>
+    <div class="flow" id="flow" aria-label="Simulated attack flow"></div>
+    <div class="estate">
+      <div id="clouds"></div>
+      <div class="services">
+        <div class="row"><span class="label">Service landscape</span><span class="muted">Each mark represents 2 services</span></div>
+        <div class="dots" id="dots" aria-label="240 simulated services"></div>
+      </div>
+      <div class="label">Data destinations</div>
+      <div class="assets">
+        <div class="asset"><b>Lake 01 / Customer</b><small>AWS · sensitive records (Canary Token)</small></div>
+        <div class="asset"><b>Lake 02 / Analytics</b><small>Azure · operational data</small></div>
+      </div>
+      <div class="regimes">
+        <span class="label">Access regimes</span>
+        <span class="tag">Role-based</span><span class="tag">Attribute-based</span><span class="tag">Policy-based</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="right">
+    <section class="panel">
+      <div class="section-head"><h2>Agent activity</h2><span id="agent-count" class="muted">0 / 36 active</span></div>
+      <div class="agents">
+        <div class="row"><span class="label">Concurrent query lanes</span><span class="muted">36 independent paths</span></div>
+        <div id="agents" class="agent-grid" aria-label="36 simulated agent lanes"></div>
+        <div class="legend">
+          <span><i class="key"></i>Active</span>
+          <span><i class="key" style="background:var(--green)"></i>Blocked</span>
+          <span><i class="key" style="background:var(--red)"></i>Data reached</span>
+          <span><i class="key" style="background:#35485d"></i>Idle</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Live Activity Stream</h2><span class="muted">Simulated events & KEV exploits</span></div>
+      <div id="feed" class="feed" role="log" aria-label="Simulation activity"><div class="muted">Select a defense posture and run the simulation.</div></div>
+    </section>
+  </div>
+</div>
+
+<section class="panel kev-table-panel">
+  <div class="section-head">
+    <h2>CISA Known Exploited Vulnerabilities (KEVs) Target Matrix</h2>
+    <span class="muted">From CTID Mappings Explorer & MITRE Threat Vision</span>
+  </div>
+  <table class="kev-table">
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>CVE ID</th>
+        <th>Target Software</th>
+        <th>CVSS</th>
+        <th>ATT&CK Technique</th>
+        <th>Exploit Mechanics / ARTEX Skill</th>
+        <th>NIST SP 800-53 Control</th>
+      </tr>
+    </thead>
+    <tbody id="kev-tbody"></tbody>
+  </table>
+</section>
+
+<footer>
+  Ground-truth attack chain modeled on ARTEX autonomous traversal capabilities and CISA KEV catalog. See <a href="docs/cisa_kev_threat_matrix.md">CISA KEV Threat Matrix</a> for full specifications.
+</footer>
 </main>
+
 <script>
+const KEV_DATA = [
+  {
+    layer: '01 / Gateway',
+    vulns: [
+      { id: 'CVE-2024-4577', name: 'PHP CGI Argument Injection', cvss: '9.8', crit: true, tech: 'T1190', desc: 'Query parameter argument injection bypass to command execution', nist: 'SI-2, SC-7', skill: 'php2shell' },
+      { id: 'CVE-2023-46805', name: 'Ivanti Connect Secure Auth Bypass', cvss: '8.2', crit: false, tech: 'T1190', desc: 'Path traversal bypassing perimeter authentication to access /api/v1/cav', nist: 'AC-3, SC-7', skill: 'katana + nuclei' },
+      { id: 'CVE-2024-3400', name: 'PAN-OS GlobalProtect Command Injection', cvss: '10.0', crit: true, tech: 'T1190', desc: 'Unauthenticated command injection in telemetry feature leading to root RCE', nist: 'SI-2, CM-2', skill: 'nuclei edge template' }
+    ]
+  },
+  {
+    layer: '02 / Access Control',
+    vulns: [
+      { id: 'CVE-2023-22515', name: 'Confluence Broken Access Control', cvss: '10.0', crit: true, tech: 'T1068, T1078', desc: 'Improper authorization allowing unauthenticated setup reset and admin creation', nist: 'AC-3, IA-2', skill: 'api-security BOLA' },
+      { id: 'CVE-2024-27198', name: 'TeamCity Admin Token Minting', cvss: '9.8', crit: true, tech: 'T1068, T1552', desc: 'Web auth bypass via /hsts-marker/ to issue administrative access tokens', nist: 'AC-2, IA-5', skill: 'tools_creds vault' },
+      { id: 'CVE-2023-38035', name: 'Ivanti Sentry API Auth Bypass', cvss: '9.8', crit: true, tech: 'T1068', desc: 'Apache HTTPD configuration flaw exposing admin port 8443 APIs', nist: 'AC-3, SC-7', skill: 'api-recon route-map' }
+    ]
+  },
+  {
+    layer: '03 / Services',
+    vulns: [
+      { id: 'CVE-2021-44228', name: 'Apache Log4j JNDI RCE (Log4Shell)', cvss: '10.0', crit: true, tech: 'T1059, T1210', desc: 'JNDI injection in logging triggers out-of-band RCE across microservices', nist: 'SI-4, SC-3', skill: 'OAST callback verify' },
+      { id: 'CVE-2023-22527', name: 'Confluence OGNL Template Injection', cvss: '9.8', crit: true, tech: 'T1059', desc: 'OGNL template injection executing commands on internal service nodes', nist: 'SI-2, SC-3', skill: 'worker bash injection' },
+      { id: 'CVE-2022-22965', name: 'Spring Framework RCE (Spring4Shell)', cvss: '9.8', crit: true, tech: 'T1190, T1059', desc: 'Data binding flaw overwrites Tomcat properties to drop executable web shells', nist: 'SI-2, CM-2', skill: 'php2shell session drop' }
+    ]
+  },
+  {
+    layer: '04 / Data Lakes',
+    vulns: [
+      { id: 'CVE-2023-34362', name: 'MOVEit Transfer SQLi & Exfiltration', cvss: '9.8', crit: true, tech: 'T1190, T1041', desc: 'Pre-auth SQLi dumps database tables and drops web shells for bulk theft', nist: 'SC-28, AC-4', skill: 'sqlmap integration' },
+      { id: 'CVE-2022-29464', name: 'WSO2 API Manager Arbitrary File Upload', cvss: '9.8', crit: true, tech: 'T1190, T1505', desc: 'Arbitrary JSP upload to web root giving root access to customer databases', nist: 'SC-28, SI-2', skill: 'worker file write' },
+      { id: 'CVE-2023-27350', name: 'PaperCut Setup Auth Bypass & Theft', cvss: '9.8', crit: true, tech: 'T1068, T1041', desc: 'Setup wizard auth bypass allowing database extraction and admin takeover', nist: 'AC-3, SC-28', skill: 'api-security extract' }
+    ]
+  }
+];
+
+// Populate KEV Table
+const tbody = document.querySelector('#kev-tbody');
+tbody.innerHTML = KEV_DATA.flatMap(group => 
+  group.vulns.map(v => `
+    <tr>
+      <td><span class="tag">${group.layer}</span></td>
+      <td><span class="cve-id">${v.id}</span></td>
+      <td><b>${v.name}</b></td>
+      <td><span class="badge-cvss ${v.crit ? 'cvss-crit' : 'cvss-high'}">${v.cvss}</span></td>
+      <td><code>${v.tech}</code></td>
+      <td>${v.desc} <small class="muted">(${v.skill})</small></td>
+      <td><span class="tag">${v.nist}</span></td>
+    </tr>
+  `)
+).join('');
+
 const clouds=[['AWS','80 services','Customer API','Partner API'],['Azure','80 services','Workforce API','Operations API'],['Google Cloud','80 services','Analytics API','Integration API']];
 const cloudEl=document.querySelector('#clouds'),dots=document.querySelector('#dots'),agents=document.querySelector('#agents'),feed=document.querySelector('#feed');
 cloudEl.innerHTML=clouds.map(c=>`<div class="cloud"><div class="cloud-name">${c[0]}<small>${c[1]}</small></div><div class="gateways"><div class="gateway"><span>${c[2]}</span><span>GW</span></div><div class="gateway"><span>${c[3]}</span><span>GW</span></div></div></div>`).join('');
-dots.innerHTML=Array.from({length:120},()=>'<i class="dot"></i>').join('');agents.innerHTML=Array.from({length:36},(_,i)=>`<i class="agent" title="Agent ${i+1}"></i>`).join('');
-const stageNames=['Gateway','Services','Access control','Data lakes'];
+dots.innerHTML=Array.from({length:120},()=>'<i class="dot"></i>').join('');
+agents.innerHTML=Array.from({length:36},(_,i)=>`<i class="agent" title="Agent ${i+1}"></i>`).join('');
+
+const stageNames=['Gateway','Access control','Services','Data lakes'];
 const flow=document.querySelector('#flow');
-flow.innerHTML=stageNames.map((name,i)=>`<div class="stage"><span class="label">0${i+1} / Layer</span><strong>${name}</strong><small class="stage-state">Waiting</small><div class="findings">KEV findings: —</div><div class="progress"><i></i></div></div>`).join('');
-let mode='baseline',timer=null;const buttons=document.querySelectorAll('[data-mode]');
-buttons.forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;buttons.forEach(x=>x.classList.toggle('selected',x===b));}));
-function log(id,message,result,cls){const line=document.createElement('div');line.className='event';const time=new Date().toLocaleTimeString([], {hour12:false});line.innerHTML=`<time>${time}</time><span class="id">A${String(id+1).padStart(2,'0')}</span><span>${message}</span><span class="${cls}">${result}</span>`;feed.prepend(line);while(feed.children.length>35)feed.lastChild.remove()}
+flow.innerHTML=stageNames.map((name,i)=>`
+  <div class="stage">
+    <span class="label">0${i+1} / Layer</span>
+    <strong>${name}</strong>
+    <small class="stage-state">Waiting</small>
+    <div class="findings">KEV findings: —</div>
+    <div class="kev-badges">
+      ${KEV_DATA[i].vulns.map(v=>`<span class="kev-badge" title="${v.name} (CVSS ${v.cvss})">${v.id}</span>`).join('')}
+    </div>
+    <div class="progress"><i></i></div>
+  </div>
+`).join('');
+
+let mode='baseline',timer=null;
+const buttons=document.querySelectorAll('[data-mode]');
+buttons.forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;
+  buttons.forEach(x=>x.classList.toggle('selected',x===b));
+}));
+
+function log(id,message,result,cls){
+  const line=document.createElement('div');
+  line.className='event';
+  const time=new Date().toLocaleTimeString([], {hour12:false});
+  line.innerHTML=`<time>${time}</time><span class="id">A${String(id+1).padStart(2,'0')}</span><span>${message}</span><span class="${cls}">${result}</span>`;
+  feed.prepend(line);
+  while(feed.children.length>40)feed.lastChild.remove();
+}
+
 const rand=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+
 document.querySelector('#run').addEventListener('click',()=>{
- clearInterval(timer);const selected=mode,start=performance.now();let completed=0,reached=0;
- const aa=[...document.querySelectorAll('.agent')],dd=[...document.querySelectorAll('.dot')],gg=[...document.querySelectorAll('.gateway')],stages=[...document.querySelectorAll('.stage')];
- const durations=stageNames.map(()=>rand(1800,3200));
- const counts=stageNames.map(()=>rand(1,3));
- const lanes=aa.map((_,i)=>({stage:0,next:start+rand(150,700),blocked:false,finished:false,offset:rand(-450,450)}));
- feed.innerHTML='';document.querySelector('#outcome').textContent='0';document.querySelector('#status').textContent='Simulation running';document.querySelector('#elapsed').textContent='00.0s';
- document.querySelectorAll('.agent,.dot,.gateway').forEach(e=>e.classList.remove('running','blocked','reached','active','risk','safe'));
- stages.forEach(stage=>{stage.className='stage';stage.querySelector('.stage-state').textContent='Waiting';stage.querySelector('.findings').textContent='KEV findings: —';stage.querySelector('.progress i').style.width='0%'});
- buttons.forEach(b=>b.disabled=true);document.querySelector('#run').disabled=true;
- timer=setInterval(()=>{const now=performance.now();document.querySelector('#elapsed').textContent=((now-start)/1000).toFixed(1)+'s';
- lanes.forEach((lane,i)=>{if(lane.finished||now<lane.next)return;const stage=lane.stage,g=i%6,d=(i*7+stage*17)%120;aa[i].className='agent running';gg[g].classList.add('active');dd[d].classList.add('active');
- if(stage===0&&i%9===0)log(i,`${clouds[Math.floor(g/2)][2+g%2]} · query dispatched`,'ACTIVE','info');
- // The visualization samples a population of independent paths; findings describe the estate, including paths stopped by controls.
- const blockChance=stage===0?({baseline:0,patch:.5,defender:0,combined:.5}[selected]):stage===2?({baseline:0,patch:0,defender:.65,combined:.75}[selected]):0;const blockedHere=Math.random()<blockChance;
- if(stage===3||blockedHere){lane.blocked=blockedHere;lane.finished=true;completed++;if(lane.blocked){aa[i].className='agent blocked';dd[d].classList.add('safe');if(i%5===0)log(i,'Defense contained path','BLOCKED','good')}else{aa[i].className='agent reached';dd[d].classList.add('risk');reached++;if(i%5===0)log(i,`${i%2?'Analytics':'Customer'} lake · access path reached`,'REACHED','bad')}document.querySelector('#outcome').textContent=reached;
- }else{lane.stage++;lane.next=now+Math.max(500,durations[stage]+lane.offset+rand(-250,250));}
- });
- stages.forEach((el,j)=>{const entered=lanes.filter(l=>l.stage>=j).length,passed=lanes.filter(l=>l.stage>j||(l.finished&&l.stage===j)).length;if(entered){el.classList.add('active');el.querySelector('.stage-state').textContent=completed===36?'Complete':`${entered} paths explored`;el.querySelector('.findings').textContent=`KEV findings: ${counts[j]} simulated`;el.querySelector('.progress i').style.width=(completed===36?100:passed/36*100)+'%';if(completed===36){el.classList.remove('active');el.classList.add('done')}}});
- document.querySelector('#agent-count').textContent=`${36-completed} / 36 active`;
- if(completed===36){clearInterval(timer);document.querySelector('#status').textContent='Simulation complete';buttons.forEach(b=>b.disabled=false);document.querySelector('#run').disabled=false;log(0,`Run complete · ${counts.reduce((a,b)=>a+b,0)} simulated KEV findings`,'DONE','info')}
- },100);
+  clearInterval(timer);
+  const selected=mode,start=performance.now();
+  let completed=0,reached=0;
+  const aa=[...document.querySelectorAll('.agent')],dd=[...document.querySelectorAll('.dot')],gg=[...document.querySelectorAll('.gateway')],stages=[...document.querySelectorAll('.stage')];
+  const durations=stageNames.map(()=>rand(1800,3200));
+  const counts=[3,3,3,3];
+  const lanes=aa.map((_,i)=>({stage:0,next:start+rand(150,700),blocked:false,finished:false,offset:rand(-450,450)}));
+  
+  feed.innerHTML='';
+  document.querySelector('#outcome').textContent='0';
+  document.querySelector('#status').textContent='Simulation running';
+  document.querySelector('#elapsed').textContent='00.0s';
+  document.querySelectorAll('.agent,.dot,.gateway').forEach(e=>e.classList.remove('running','blocked','reached','active','risk','safe'));
+  stages.forEach(stage=>{
+    stage.className='stage';
+    stage.querySelector('.stage-state').textContent='Waiting';
+    stage.querySelector('.findings').textContent='KEV findings: —';
+    stage.querySelector('.progress i').style.width='0%';
+  });
+  
+  buttons.forEach(b=>b.disabled=true);
+  document.querySelector('#run').disabled=true;
+  
+  timer=setInterval(()=>{
+    const now=performance.now();
+    document.querySelector('#elapsed').textContent=((now-start)/1000).toFixed(1)+'s';
+    
+    lanes.forEach((lane,i)=>{
+      if(lane.finished||now<lane.next)return;
+      const stage=lane.stage,g=i%6,d=(i*7+stage*17)%120;
+      aa[i].className='agent running';
+      gg[g].classList.add('active');
+      dd[d].classList.add('active');
+      
+      const v = KEV_DATA[stage].vulns[i % 3];
+      if(stage===0 && i%8===0) {
+        log(i, `${clouds[Math.floor(g/2)][2+g%2]} · Probing ${v.id} (${v.name})`, 'PROBED', 'info');
+      } else if (stage===1 && i%9===0) {
+        log(i, `Token exchange · Testing ${v.id} (${v.name})`, 'PROBED', 'info');
+      } else if (stage===2 && i%9===0) {
+        log(i, `Internal pivot · Injecting ${v.id} (${v.name})`, 'PROBED', 'info');
+      }
+      
+      // Control probabilities by scenario
+      const blockChance = stage===0 ? ({baseline:0,patch:.55,defender:0,combined:.55}[selected]) :
+                          stage===1 ? ({baseline:0,patch:0,defender:.45,combined:.55}[selected]) :
+                          stage===2 ? ({baseline:0,patch:0,defender:.65,combined:.75}[selected]) : 0;
+                          
+      const blockedHere = Math.random() < blockChance;
+      
+      if(stage===3 || blockedHere){
+        lane.blocked=blockedHere;
+        lane.finished=true;
+        completed++;
+        if(lane.blocked){
+          aa[i].className='agent blocked';
+          dd[d].classList.add('safe');
+          if(i%4===0) log(i, `Defense contained ${v.id} [${v.tech}]`, 'BLOCKED', 'good');
+        } else {
+          aa[i].className='agent reached';
+          dd[d].classList.add('risk');
+          reached++;
+          if(i%4===0) log(i, `Exploited ${v.id} · Exfiltrated CANARY_ALPHA_7739`, 'REACHED', 'bad');
+        }
+        document.querySelector('#outcome').textContent=reached;
+      } else {
+        lane.stage++;
+        lane.next=now+Math.max(500,durations[stage]+lane.offset+rand(-250,250));
+      }
+    });
+    
+    stages.forEach((el,j)=>{
+      const entered=lanes.filter(l=>l.stage>=j).length;
+      const passed=lanes.filter(l=>l.stage>j||(l.finished&&l.stage===j)).length;
+      if(entered){
+        el.classList.add('active');
+        el.querySelector('.stage-state').textContent=completed===36?'Complete':`${entered} paths explored`;
+        el.querySelector('.findings').textContent=`3 KEVs identified: ${KEV_DATA[j].vulns.map(x=>x.id).join(', ')}`;
+        el.querySelector('.progress i').style.width=(completed===36?100:passed/36*100)+'%';
+        if(completed===36){
+          el.classList.remove('active');
+          el.classList.add('done');
+        }
+      }
+    });
+    
+    document.querySelector('#agent-count').textContent=`${36-completed} / 36 active`;
+    
+    if(completed===36){
+      clearInterval(timer);
+      document.querySelector('#status').textContent='Simulation complete';
+      buttons.forEach(b=>b.disabled=false);
+      document.querySelector('#run').disabled=false;
+      log(0, `Run complete · All 12 CISA KEV findings cataloged across 4 layers`, 'DONE', 'info');
+    }
+  }, 100);
 });
 </script>
-</body></html>
+</body>
+</html>

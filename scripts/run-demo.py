@@ -26,6 +26,26 @@ RESET = "\033[0m"
 BASE_URL = "http://127.0.0.1:8080"
 DEFENDER_URL = "http://127.0.0.1:9000"
 
+KEV_MAPPINGS = {
+    1: {"layer": "01 / Perimeter Gateway", "cves": ["CVE-2024-4577", "CVE-2023-46805", "CVE-2024-3400"], "tech": "T1190: Exploit Public-Facing Application"},
+    2: {"layer": "02 / Access Control & Identity", "cves": ["CVE-2023-22515", "CVE-2024-27198", "CVE-2023-38035"], "tech": "T1068 / T1078 / T1552"},
+    3: {"layer": "03 / Services & Workflow Pivot", "cves": ["CVE-2021-44228", "CVE-2023-22527", "CVE-2022-22965"], "tech": "T1059 / T1210: Command & Lateral Pivot"},
+    4: {"layer": "04 / Data Destinations & Records", "cves": ["CVE-2023-34362", "CVE-2022-29464", "CVE-2023-27350"], "tech": "T1190 (SQLi) / T1041 (Exfiltration)"}
+}
+
+def print_kev_matrix():
+    """Prints the CISA Known Exploited Vulnerabilities matrix mapped to the 4 layers."""
+    print(f"\n{BOLD}{'='*80}")
+    print(f"{' '*20}CISA KNOWN EXPLOITED VULNERABILITIES (KEV) MATRIX")
+    print(f"{'='*80}{RESET}")
+    print(f"{'Layer':<30} | {'Mapped CISA KEV CVEs':<28} | {'MITRE ATT&CK'}")
+    print("-" * 80)
+    for hop, info in KEV_MAPPINGS.items():
+        cves_str = ", ".join(info["cves"][:2]) + f" (+1)"
+        print(f"{info['layer']:<30} | {CYAN}{cves_str:<28}{RESET} | {YELLOW}{info['tech']}{RESET}")
+    print("-" * 80)
+    print(f"Full details available in {BOLD}docs/cisa_kev_threat_matrix.md{RESET}\n")
+
 def get_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
 
@@ -61,7 +81,7 @@ def run_baseline_demo(pace: float = 0.5):
     t_start = time.time()
 
     # Hop 1: Edge export
-    print(f"{BOLD}[1/4] Probing Perimeter Entry: POST /api/edge/export{RESET}")
+    print(f"{BOLD}[1/4] Probing Perimeter Entry (Layer 01 Gateway | KEV: CVE-2024-4577, CVE-2023-46805 | T1190): POST /api/edge/export{RESET}")
     payload1 = json.dumps({"format": "csv", "include_tokens": True}).encode()
     req1 = urllib.request.Request(f"{BASE_URL}/api/edge/export", data=payload1, headers={"Content-Type": "application/json"}, method="POST")
     t0 = time.time()
@@ -76,7 +96,7 @@ def run_baseline_demo(pace: float = 0.5):
     time.sleep(pace)
 
     # Hop 2: Identity exchange
-    print(f"{BOLD}[2/4] Traversing Identity Boundary: POST /api/identity/exchange{RESET}")
+    print(f"{BOLD}[2/4] Traversing Identity Boundary (Layer 02 Access Control | KEV: CVE-2023-22515, CVE-2024-27198 | T1068): POST /api/identity/exchange{RESET}")
     req2 = urllib.request.Request(f"{BASE_URL}/api/identity/exchange", headers={"Authorization": f"Bearer {edge_tok}"}, method="POST")
     t0 = time.time()
     with urllib.request.urlopen(req2) as resp:
@@ -89,7 +109,7 @@ def run_baseline_demo(pace: float = 0.5):
     time.sleep(pace)
 
     # Hop 3: Workflow pivot
-    print(f"{BOLD}[3/4] Executing Cross-Service Pivot: POST /api/workflow/pivot{RESET}")
+    print(f"{BOLD}[3/4] Executing Cross-Service Pivot (Layer 03 Services | KEV: CVE-2021-44228, CVE-2023-22527 | T1059, T1210): POST /api/workflow/pivot{RESET}")
     req3 = urllib.request.Request(f"{BASE_URL}/api/workflow/pivot", headers={"Authorization": f"Bearer {wf_tok}"}, method="POST")
     t0 = time.time()
     with urllib.request.urlopen(req3) as resp:
@@ -102,7 +122,7 @@ def run_baseline_demo(pace: float = 0.5):
     time.sleep(pace)
 
     # Hop 4: Records canary
-    print(f"{BOLD}[4/4] Exfiltrating Critical Asset: GET /api/records/canary{RESET}")
+    print(f"{BOLD}[4/4] Exfiltrating Critical Asset (Layer 04 Crown Jewels | KEV: CVE-2023-34362, CVE-2022-29464 | T1041): GET /api/records/canary{RESET}")
     req4 = urllib.request.Request(f"{BASE_URL}/api/records/canary", headers={"Authorization": f"Bearer {rec_tok}"}, method="GET")
     t0 = time.time()
     with urllib.request.urlopen(req4) as resp:
@@ -247,10 +267,13 @@ def main():
     parser = argparse.ArgumentParser(description="ARTEX Autonomous Cyber Simulation Demo Runner")
     parser.add_argument("--mode", choices=["baseline", "patch", "defender", "combined"], help="Run specific scenario demo")
     parser.add_argument("--test-all", action="store_true", help="Execute complete automated test suite and report")
+    parser.add_argument("--show-kevs", action="store_true", help="Display the 4-layer CISA KEV Threat Matrix")
     parser.add_argument("--pace", type=float, default=0.4, help="Pacing delay (seconds) between hops for live presentation")
     args = parser.parse_args()
 
-    if args.test_all:
+    if args.show_kevs:
+        print_kev_matrix()
+    elif args.test_all:
         print(f"{BOLD}{CYAN}[*] Starting Complete Automated Acceptance Suite...{RESET}\n")
         results = []
         results.append(run_baseline_demo(pace=0.0))

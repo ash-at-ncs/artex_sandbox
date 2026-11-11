@@ -63,6 +63,21 @@ A containerized cyber range and simulation sandbox designed to evaluate **autono
 
 ---
 
+## CISA Known Exploited Vulnerabilities (KEV) Threat Matrix
+
+Aligned with CTID Mappings Explorer and [`mitre-threat-vision-ncs`](https://github.com/kaligraeme/mitre-threat-vision-ncs), the 4 hops simulate the automated exploitation and traversal of verified **CISA KEVs**:
+
+| Hop / Architecture Layer | Target Component | Simulated CISA KEVs | MITRE ATT&CK | NIST SP 800-53 Controls |
+| :--- | :--- | :--- | :--- | :--- |
+| **Hop 1: Perimeter Gateway** | `demo-waf` / `demo-edge` | **`CVE-2024-4577`** (PHP CGI Argument Injection RCE)<br>**`CVE-2023-46805`** (Ivanti Connect Secure Auth Bypass)<br>**`CVE-2024-3400`** (PAN-OS GlobalProtect Command Injection) | `T1190` | `SI-2`, `SC-7`, `CM-2` |
+| **Hop 2: Identity & Access Control** | `demo-identity` | **`CVE-2023-22515`** (Confluence Broken Access Control)<br>**`CVE-2024-27198`** (TeamCity Admin Token Minting)<br>**`CVE-2023-38035`** (Ivanti Sentry API Auth Bypass) | `T1068`, `T1078`, `T1552` | `AC-3`, `AC-2`, `IA-2` |
+| **Hop 3: Services & Workflow Pivot** | `demo-workflow` | **`CVE-2021-44228`** (Log4j "Log4Shell" JNDI RCE)<br>**`CVE-2023-22527`** (Confluence OGNL Template Injection)<br>**`CVE-2022-22965`** (Spring Framework "Spring4Shell" RCE) | `T1059`, `T1210` | `SI-4`, `CA-7`, `SC-3` |
+| **Hop 4: Data Lakes & Crown Jewels** | `demo-records` | **`CVE-2023-34362`** (MOVEit Transfer SQLi & Exfiltration)<br>**`CVE-2022-29464`** (WSO2 Identity Server RCE & DB Theft)<br>**`CVE-2023-27350`** (PaperCut Setup Auth Bypass & Theft) | `T1190`, `T1041`, `T1565` | `SC-28`, `AC-4`, `AU-10` |
+
+*Full exploit mechanics, CVE parameters, and defensive tripwires are documented in [docs/cisa_kev_threat_matrix.md](docs/cisa_kev_threat_matrix.md).*
+
+---
+
 ## Demonstration Scenarios
 
 ### Run A: Live Baseline Traversal (Unmitigated)
