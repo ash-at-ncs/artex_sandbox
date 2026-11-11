@@ -507,9 +507,9 @@
     </div>
 
     <div class="run-row">
-      <button id="new-run-btn" title="Simulate attack with current defense posture">
+      <button id="new-run-btn" title="Generate a new randomized infrastructure topology">
         <span class="run-icon">↻</span>
-        <span>NEW RUN</span>
+        <span>NEW INFRA</span>
       </button>
       <div id="run-hud">READY · SELECT SCENARIO & RUN SIMULATION</div>
     </div>
@@ -565,6 +565,194 @@ const LAYER_KEVS = [
     { id: 'CVE-2023-36884', title: 'Office HTML Document Exfiltration', tech: 'T1041' }
   ]
 ];
+
+/**
+ * Domain-accurate CISA KEV mitigation capabilities
+ * Maps technical exploit mechanics against WAF (SI-2/SC-7) vs Behavioral ML (SI-4/AC-3/IA-5).
+ */
+const KEV_MITIGATION_RULES = {
+  // Layer 0 - Perimeter & Cloud Ingress
+  'CVE-2024-4577': {
+    waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF query regex drops %ad PHP CGI argument injection' },
+    ml:  { mitigates: false, reason: 'Edge CGI exploit bypasses internal behavioral telemetry' }
+  },
+  'CVE-2023-46805': {
+    waf: { mitigates: true, control: 'NIST SC-7', reason: 'WAF virtual patch restricts unauthenticated /api/v1/cav/client endpoints' },
+    ml:  { mitigates: false, reason: 'Perimeter auth bypass occurs before internal ML baseline can flag session' }
+  },
+  'CVE-2024-3400': {
+    waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF signature inspects & filters GlobalProtect HTTP telemetry header payload' },
+    ml:  { mitigates: false, reason: 'Edge firewall OS injection executes at edge appliance firmware layer' }
+  },
+  'CVE-2023-3519': {
+    waf: { mitigates: true, control: 'NIST SC-7', reason: 'WAF protocol validator drops malformed HTTP Host header buffer overflow' },
+    ml:  { mitigates: false, reason: 'Edge ADC stack overflow executes pre-auth before user identity creation' }
+  },
+  'CVE-2023-20198': {
+    waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF virtual patch blocks unauthenticated HTTP REST /webui endpoint access' },
+    ml:  { mitigates: false, reason: 'Direct network boundary exploitation circumvents internal host ML agents' }
+  },
+  'CVE-2024-21887': {
+    waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF ruleset filters command injection payload in /api/v1/license/keys-status' },
+    ml:  { mitigates: false, reason: 'In-line edge gateway exploit triggers prior to internal microservice logs' }
+  },
+
+  // Layer 1 - Gateways & Auth
+  'CVE-2023-22515': {
+    waf: { mitigates: false, reason: 'Legitimate HTTP requests to /setup endpoints pass perimeter WAF inspection' },
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML flags setup wizard execution on established production instance' }
+  },
+  'CVE-2024-27198': {
+    waf: { mitigates: false, reason: 'OAuth/Auth endpoint traversal passes standard perimeter HTTP parsers' },
+    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Behavioral ML isolates service on forged administrative token minting' }
+  },
+  'CVE-2023-38035': {
+    waf: { mitigates: true, control: 'NIST SC-7', reason: 'Edge WAF blocks unauthenticated HTTP requests to MICS port 8443 interface' },
+    ml:  { mitigates: false, reason: 'Admin API interface lacks granular internal behavioral baseline' }
+  },
+  'CVE-2023-4966': {
+    waf: { mitigates: false, reason: 'Outbound session token memory disclosure occurs in TLS response stream' },
+    ml:  { mitigates: true, control: 'NIST AC-3 / IA-5', reason: 'Zero-Trust ML halts stolen session token used across divergent IP/fingerprint' }
+  },
+  'CVE-2024-1709': {
+    waf: { mitigates: false, reason: 'Setup wizard URI /SetupWizard.aspx is considered valid application traffic by WAF' },
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML blocks unauthorized admin account creation out-of-band' }
+  },
+  'CVE-2021-26855': {
+    waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF virtual patch filters X-AnonResource-Backend SSRF header' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects internal SSRF lateral probe to backend Exchange RPC' }
+  },
+
+  // Layer 2 - Services Mesh & Applications
+  'CVE-2021-44228': {
+    waf: { mitigates: false, reason: 'Nested/obfuscated JNDI ${jndi:ldap://...} strings bypass edge WAF pattern matching' },
+    ml:  { mitigates: true, control: 'NIST SI-4 / SC-7', reason: 'Behavioral ML terminates unexpected outbound LDAP/RMI egress from worker node' }
+  },
+  'CVE-2023-22527': {
+    waf: { mitigates: false, reason: 'OGNL template injection resides inside legitimate JSON/POST application payload' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects anomalous subprocess spawning /bin/sh from java.exe' }
+  },
+  'CVE-2022-22965': {
+    waf: { mitigates: false, reason: 'Spring parameter binding injection evades standard perimeter URL signatures' },
+    ml:  { mitigates: true, control: 'NIST SI-4 / SI-3', reason: 'Behavioral ML halts unexpected file write to Tomcat webapps/ROOT/shell.jsp' }
+  },
+  'CVE-2022-29464': {
+    waf: { mitigates: false, reason: 'Multipart file upload endpoint accepts standard HTTP multipart requests' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Zero-Trust agent blocks execution of newly dropped unapproved JSP binary' }
+  },
+  'CVE-2023-2868': {
+    waf: { mitigates: false, reason: 'Perimeter WAF does not inspect deep internal tar archive attachments' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects anomalous reverse shell connection to foreign IP' }
+  },
+  'CVE-2022-30190': {
+    waf: { mitigates: false, reason: 'MSDT URI handler protocol payload passes perimeter proxies as normal doc link' },
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML terminates rogue sdiagnhost.exe process execution' }
+  },
+
+  // Layer 3 - Clustered Backend Databases & Vaults
+  'CVE-2023-34362': {
+    waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF SQLi virtual patch inspects & blocks malformed X-MOVEit headers' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects abnormal mass query exfiltration on core SQL tables' }
+  },
+  'CVE-2023-27350': {
+    waf: { mitigates: false, reason: 'Setup wizard bypass occurs over legitimate administrative web interface' },
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML blocks unauthenticated database dump and lateral admin spawn' }
+  },
+  'CVE-2020-1472': {
+    waf: { mitigates: false, reason: 'Zerologon exploits Netlogon RPC (TCP 135/445), not covered by HTTP/WAF' },
+    ml:  { mitigates: true, control: 'NIST AC-3 / IA-5', reason: 'Behavioral ML flags anomalous NetrServerAuthenticate with 16 zero-bytes' }
+  },
+  'CVE-2023-36884': {
+    waf: { mitigates: false, reason: 'Office document protocol payload bypasses perimeter application firewalls' },
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML halts SearchFilterHost.exe memory injection and credential dump' }
+  }
+};
+
+/**
+ * Checks whether a given vulnerability can be addressed by the active mitigation scenario.
+ */
+function checkVulnMitigation(vulnId, mode, node) {
+  if (mode === 'baseline') {
+    return {
+      addressed: false,
+      badge: 'EXPLOITED',
+      reason: 'Baseline scenario unmitigated: zero active defenses applied'
+    };
+  }
+
+  const rule = KEV_MITIGATION_RULES[vulnId] || {
+    waf: { mitigates: node.layerIdx <= 1, control: 'NIST SI-2', reason: 'Perimeter filtering rule' },
+    ml:  { mitigates: node.layerIdx >= 1, control: 'NIST SI-4', reason: 'Internal anomaly detection' }
+  };
+
+  if (mode === 'patch') {
+    if (rule.waf && rule.waf.mitigates) {
+      return {
+        addressed: true,
+        badge: 'SHIELDED · WAF VIRTUAL PATCH',
+        control: rule.waf.control,
+        reason: rule.waf.reason
+      };
+    }
+    return {
+      addressed: false,
+      badge: 'WAF BYPASS',
+      reason: rule.waf ? rule.waf.reason : 'Vulnerability unaddressed by perimeter WAF'
+    };
+  }
+
+  if (mode === 'defender') {
+    if (rule.ml && rule.ml.mitigates) {
+      return {
+        addressed: true,
+        badge: 'CONTAINED · BEHAVIORAL ML',
+        control: rule.ml.control,
+        reason: rule.ml.reason
+      };
+    }
+    return {
+      addressed: false,
+      badge: 'ML MISSED',
+      reason: rule.ml ? rule.ml.reason : 'Activity does not trigger behavioral threshold'
+    };
+  }
+
+  if (mode === 'combined') {
+    // Defense-in-depth: WAF + ML + Honeytokens
+    if (rule.waf && rule.waf.mitigates) {
+      return {
+        addressed: true,
+        badge: 'SHIELDED · WAF VIRTUAL PATCH',
+        control: rule.waf.control,
+        reason: rule.waf.reason
+      };
+    }
+    if (rule.ml && rule.ml.mitigates) {
+      return {
+        addressed: true,
+        badge: 'CONTAINED · ZERO-TRUST ML',
+        control: rule.ml.control,
+        reason: rule.ml.reason
+      };
+    }
+    // Database honeypot alarm protection
+    if (node.isLake || node.isDb || node.layerIdx === 3) {
+      return {
+        addressed: true,
+        badge: 'TRAPPED · HONEYTOKEN TRIPWIRE',
+        control: 'NIST SC-7 / SI-4',
+        reason: 'Honeytoken canary tripwire halted database lateral dump'
+      };
+    }
+    return {
+      addressed: false,
+      badge: 'UNADDRESSED',
+      reason: 'Exploit mechanism evaded both WAF and behavioral detection'
+    };
+  }
+
+  return { addressed: false, badge: 'EXPLOITED', reason: 'Unmitigated' };
+}
 
 // Architectural Layer Definitions: Randomly denser forest of items with 1-3 clustered instances of the same icon
 const LAYER_CONFIG = [
@@ -683,6 +871,8 @@ const LAYER_CONFIG = [
 
 let currentNodes = [];
 let currentWires = [];
+let savedAttackOrigins = [];
+let activeTimeouts = [];
 let isSimulating = false;
 let runCount = 0;
 let runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
@@ -690,7 +880,14 @@ let inFlightOperations = 0;
 let layerHits = [0, 0, 0, 0];
 let currentMode = 'baseline';
 
-// Scenario defense probabilities per layer
+// Expose state on window for inspection & automation
+window.currentNodes = currentNodes;
+window.currentWires = currentWires;
+window.runStats = runStats;
+window.isSimulating = false;
+window.runCount = 0;
+
+// Scenario defense probabilities per layer (used for metadata/HUD)
 const DEFENSE_SCENARIOS = {
   baseline: {
     tag: '01 / BASELINE',
@@ -731,6 +928,19 @@ const svg = document.getElementById('wire-svg');
 const nodesLayer = document.getElementById('nodes-layer');
 const newRunBtn = document.getElementById('new-run-btn');
 const runHud = document.getElementById('run-hud');
+
+function safeTimeout(fn, delay) {
+  const t = setTimeout(() => {
+    fn();
+  }, delay);
+  activeTimeouts.push(t);
+  return t;
+}
+
+function clearAllActiveTimeouts() {
+  activeTimeouts.forEach(t => clearTimeout(t));
+  activeTimeouts = [];
+}
 
 /**
  * Organically position all objects across the screen and cluster them neatly.
@@ -873,10 +1083,13 @@ function layoutGraph() {
     nodesLayer.appendChild(el);
     node.el = el;
   });
+
+  window.currentNodes = currentNodes;
+  window.currentWires = currentWires;
 }
 
 /**
- * Straight circuit lines between clusters (Commit 2 version)
+ * Straight circuit lines between clusters
  */
 function createWire(source, target) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -895,6 +1108,49 @@ function createWire(source, target) {
     hit: false,
     defended: false
   });
+}
+
+/**
+ * Resets the visual state of the existing infrastructure without rebuilding it.
+ */
+function resetInfraVisuals() {
+  clearAllActiveTimeouts();
+
+  // Remove active wire packets and impact bursts
+  const packets = svg.querySelectorAll('.wire-packet');
+  packets.forEach(p => p.remove());
+
+  const bursts = nodesLayer.querySelectorAll('.impact-burst');
+  bursts.forEach(b => b.remove());
+
+  // Reset node DOM and data states
+  currentNodes.forEach(node => {
+    node.hit = false;
+    node.defended = false;
+    if (node.el) {
+      node.el.className = 'node';
+      node.el.removeAttribute('title');
+      const kevEl = node.el.querySelector('.node-kev');
+      if (kevEl) {
+        kevEl.innerHTML = `
+          <span class="cve">${node.kev.id}</span>
+          <span class="vuln-title">${node.kev.title}</span>
+        `;
+      }
+    }
+  });
+
+  // Reset wire DOM and data states
+  currentWires.forEach(wire => {
+    wire.hit = false;
+    wire.defended = false;
+    wire.path.setAttribute('class', 'wire');
+  });
+
+  runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
+  inFlightOperations = 0;
+  layerHits = [0, 0, 0, 0];
+  isSimulating = false;
 }
 
 function triggerNodeHit(node, isExfil = false, customKev = null) {
@@ -919,28 +1175,23 @@ function triggerNodeHit(node, isExfil = false, customKev = null) {
     burst.style.left = `${node.x}px`;
     burst.style.top = `${node.y}px`;
     nodesLayer.appendChild(burst);
-    setTimeout(() => burst.remove(), 700);
+    safeTimeout(() => burst.remove(), 700);
   }
 }
 
-function triggerNodeDefense(node, wire) {
+function triggerNodeDefense(node, wire, mitigation) {
   if (node.hit || node.defended) return;
   node.defended = true;
   runStats.blocks++;
 
   if (node.el) {
     node.el.classList.add('defended');
+    const badgeText = mitigation.badge || 'CONTAINED';
+    const subText = mitigation.control ? `${node.kev.id} · [${mitigation.control}]` : `Mitigated ${node.kev.id}`;
+    node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
-      let badgeTitle = 'CONTAINED · DEFENSE SHIELD';
-      if (currentMode === 'patch') {
-        badgeTitle = 'SHIELDED · WAF VIRTUAL PATCH';
-      } else if (currentMode === 'defender') {
-        badgeTitle = 'CONTAINED · BEHAVIORAL ML [SI-4]';
-      } else if (currentMode === 'combined') {
-        badgeTitle = node.layerIdx <= 1 ? 'SHIELDED · WAF VIRTUAL PATCH' : 'CONTAINED · ML ZERO-TRUST';
-      }
-      kevEl.innerHTML = `<span class="cve">${badgeTitle}</span><span class="vuln-title">Mitigated ${node.kev.id} [${node.kev.tech}]</span>`;
+      kevEl.innerHTML = `<span class="cve">${badgeText}</span><span class="vuln-title">${subText}</span>`;
     }
   }
 
@@ -960,7 +1211,7 @@ function animateWirePulse(wire, onComplete) {
 
   const pathEl = wire.path;
   const totalLength = pathEl.getTotalLength();
-  const duration = rand(380, 700);
+  const duration = rand(360, 640);
   const startTime = performance.now();
 
   function step(time) {
@@ -983,32 +1234,59 @@ function animateWirePulse(wire, onComplete) {
   requestAnimationFrame(step);
 }
 
-function startSimulation() {
+/**
+ * Builds a fresh randomized infrastructure topology and runs the simulation.
+ */
+function generateNewInfra() {
+  clearAllActiveTimeouts();
+  layoutGraph();
+
+  // Select 1-2 persistent ingress entry points for this infrastructure topology
+  const ingressNodes = currentNodes.filter(n => n.layerIdx === 0);
+  const startCount = randInt(1, 2);
+  savedAttackOrigins = shuffle(ingressNodes).slice(0, startCount).map(n => n.id);
+
+  runSimulationOnCurrentInfra();
+}
+
+/**
+ * Runs the simulation on the CURRENT infrastructure and SAME assigned vulnerabilities.
+ */
+function runSimulationOnCurrentInfra() {
+  resetInfraVisuals();
   isSimulating = true;
+  window.isSimulating = true;
   runCount++;
-  runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
-  inFlightOperations = 0;
-  layerHits = [0, 0, 0, 0];
+  window.runCount = runCount;
 
   const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
   runHud.className = '';
-  runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · TRAVERSING PERIMETER INGRESS...`;
+  runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · SIMULATING ON SAME INFRA...`;
 
-  layoutGraph();
+  const startNodes = savedAttackOrigins
+    .map(id => currentNodes.find(n => n.id === id))
+    .filter(Boolean);
 
-  // 1-2 ingress nodes initiate attack
-  const ingressNodes = currentNodes.filter(n => n.layerIdx === 0);
-  const startCount = randInt(1, 2);
-  const startNodes = shuffle(ingressNodes).slice(0, startCount);
+  const entriesToUse = startNodes.length > 0 ? startNodes : currentNodes.filter(n => n.layerIdx === 0).slice(0, 1);
 
-  startNodes.forEach((startNode, i) => {
+  entriesToUse.forEach((startNode, i) => {
     inFlightOperations++;
-    setTimeout(() => {
-      triggerNodeHit(startNode);
-      layerHits[0]++;
-      traverseFromNode(startNode, 1);
-      decrementInFlight();
-    }, 250 + i * 350);
+    safeTimeout(() => {
+      // Ingress node vulnerability mitigation check:
+      const ingressMitigation = checkVulnMitigation(startNode.kev.id, currentMode, startNode);
+
+      if (ingressMitigation.addressed) {
+        // Vulnerability addressed right at perimeter (e.g. WAF virtual patch blocks CGI / auth bypass)
+        triggerNodeDefense(startNode, null, ingressMitigation);
+        decrementInFlight();
+      } else {
+        // Vulnerability unmitigated: ingress node is compromised
+        triggerNodeHit(startNode);
+        layerHits[0]++;
+        traverseFromNode(startNode, 1);
+        decrementInFlight();
+      }
+    }, 220 + i * 320);
   });
 }
 
@@ -1028,8 +1306,8 @@ function traverseFromNode(node, depth) {
 
   selectedWires.forEach((wire, idx) => {
     inFlightOperations++;
-    const wireDelay = rand(300, 600) + idx * 200;
-    setTimeout(() => {
+    const wireDelay = rand(280, 560) + idx * 180;
+    safeTimeout(() => {
       animateWirePulse(wire, () => {
         const target = wire.target;
         if (target.hit || target.defended) {
@@ -1037,20 +1315,11 @@ function traverseFromNode(node, depth) {
           return;
         }
 
-        // Scenario-driven defense containment check:
-        // In Baseline (unmitigated), there are zero active defenses (0% containment)
-        let isDefended = false;
-        if (currentMode !== 'baseline') {
-          const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
-          const baseProb = depth === 1 ? scn.p0 :
-                           depth === 2 ? scn.p1 :
-                           depth === 3 ? scn.p2 : 0;
-          const securityBonus = target.isSecurity ? 0.25 : 0;
-          isDefended = Math.random() < Math.min(0.95, baseProb + securityBonus);
-        }
+        // Domain-accurate vulnerability mitigation check for this target node & active scenario
+        const mitigation = checkVulnMitigation(target.kev.id, currentMode, target);
 
-        if (isDefended) {
-          triggerNodeDefense(target, wire);
+        if (mitigation.addressed) {
+          triggerNodeDefense(target, wire, mitigation);
           decrementInFlight();
         } else {
           if (layerHits[depth] < 3) {
@@ -1060,12 +1329,12 @@ function traverseFromNode(node, depth) {
             const isFinalLake = target.layerIdx === 3;
             triggerNodeHit(target, isFinalLake);
 
-            // Multi-instance target group compromise: 1 or 2 get hacked by a given vuln
+            // Multi-instance target group compromise: 1 or 2 get hacked by the same unmitigated vuln
             if (target.groupId && layerHits[depth] < 3 && Math.random() < 0.45) {
               const siblings = currentNodes.filter(n => n.groupId === target.groupId && n.id !== target.id && !n.hit && !n.defended);
               if (siblings.length > 0) {
                 const siblingVic = shuffle(siblings)[0];
-                setTimeout(() => {
+                safeTimeout(() => {
                   if (layerHits[depth] < 3 && !siblingVic.hit) {
                     layerHits[depth]++;
                     triggerNodeHit(siblingVic, target.isLake, target.kev);
@@ -1084,12 +1353,12 @@ function traverseFromNode(node, depth) {
               if (extraDbCount > 0 && clusterPeers.length > 0) {
                 const victims = shuffle(clusterPeers).slice(0, extraDbCount);
                 victims.forEach((vic, vIdx) => {
-                  setTimeout(() => {
+                  safeTimeout(() => {
                     if (layerHits[3] < 3) {
                       layerHits[3]++;
                       triggerNodeHit(vic, true, target.kev);
                     }
-                  }, 280 + vIdx * 200);
+                  }, 260 + vIdx * 180);
                 });
               }
             }
@@ -1114,6 +1383,8 @@ function decrementInFlight() {
 
 function finalizeSimulation() {
   isSimulating = false;
+  window.isSimulating = false;
+  window.runStats = runStats;
   const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
   if (runStats.lakesBreached > 0) {
     runHud.className = 'breached';
@@ -1135,26 +1406,27 @@ function finalizeSimulation() {
   }
 }
 
-// Bind 4 mode scenario buttons
+// Bind 4 mode scenario buttons: tests the SAME infrastructure with SAME vulns
 const modeButtons = document.querySelectorAll('.mode-btn');
 modeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     currentMode = btn.dataset.mode;
     modeButtons.forEach(b => b.classList.toggle('selected', b === btn));
-    startSimulation();
+    runSimulationOnCurrentInfra();
   });
 });
 
+// "NEW INFRA" generates a fresh infrastructure layout
 newRunBtn.addEventListener('click', () => {
-  startSimulation();
+  generateNewInfra();
 });
 
 window.addEventListener('resize', () => {
-  layoutGraph();
+  generateNewInfra();
 });
 
 window.addEventListener('load', () => {
-  startSimulation();
+  generateNewInfra();
 });
 </script>
 </body>
