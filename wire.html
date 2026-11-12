@@ -63,7 +63,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 7px;
+    gap: 5px;
+    padding: 0 150px 0 12px;
     z-index: 1000;
     pointer-events: none;
   }
@@ -72,7 +73,7 @@
   .mode-strip {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     flex-wrap: wrap;
     justify-content: center;
     pointer-events: auto;
@@ -82,7 +83,7 @@
     background: rgba(9, 16, 24, 0.88);
     border: 1px solid rgba(88, 217, 219, 0.22);
     color: #8fa3b8;
-    padding: 5px 12px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
     display: flex;
@@ -135,7 +136,9 @@
   .run-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
     pointer-events: auto;
   }
 
@@ -147,7 +150,7 @@
     cursor: pointer;
     font: inherit;
     font-size: 10px;
-    padding: 8px 10px;
+    padding: 5px 8px;
     white-space: nowrap;
   }
 
@@ -161,10 +164,10 @@
     background: rgba(0, 30, 36, 0.85);
     border: 1.5px solid var(--turquoise);
     color: var(--turquoise);
-    padding: 7px 24px;
-    font-size: 11.5px;
+    padding: 5px 14px;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     border-radius: 4px;
     cursor: pointer;
@@ -206,7 +209,7 @@
     color: var(--turquoise);
     background: rgba(0, 16, 22, 0.8);
     border: 1px solid rgba(0, 240, 255, 0.25);
-    padding: 4px 14px;
+    padding: 4px 9px;
     border-radius: 3px;
     backdrop-filter: blur(6px);
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
@@ -776,6 +779,9 @@ const KEV_MITIGATION_RULES = {
  */
 function checkVulnMitigation(vulnId, mode, node) {
   if (!vulnId) {
+    if (mode === 'combined' && (node.isLake || node.isDb || node.layerIdx === 3)) {
+      return { addressed: true, badge: 'TRAPPED · HONEYTOKEN TRIPWIRE', control: 'NIST SI-4', reason: 'Simulated honeytoken tripwire stopped access to the data target.' };
+    }
     return { addressed: false, badge: 'SIMULATED ACCESS', reason: 'No CVE is mapped to this asset; the path assumes access.' };
   }
   if (mode === 'baseline') {
@@ -790,13 +796,10 @@ function checkVulnMitigation(vulnId, mode, node) {
     waf: { mitigates: node.layerIdx <= 1, control: 'NIST SI-2', reason: 'Perimeter filtering rule' },
     ml:  { mitigates: node.layerIdx >= 1, control: 'NIST SI-4', reason: 'Internal anomaly detection' }
   };
+  const isNonHttpProtocol = ['aws-vpn', 'az-net', 'az-branch', 'partner-gw'].includes(node.groupId);
 
   if (mode === 'patch') {
     // WAF only inspects HTTP/HTTPS traffic: completely blind to VPNs, SD-WAN, and private peered links
-    const isNonHttpProtocol = node.groupId === 'aws-vpn' || 
-                              node.groupId === 'az-net' || 
-                              node.groupId === 'az-branch' || 
-                              node.groupId === 'partner-gw';
     if (isNonHttpProtocol) {
       return {
         addressed: false,
@@ -805,7 +808,7 @@ function checkVulnMitigation(vulnId, mode, node) {
       };
     }
 
-    if (rule.waf && rule.waf.mitigates) {
+    if (!isNonHttpProtocol && rule.waf && rule.waf.mitigates) {
       return {
         addressed: true,
         badge: 'SHIELDED · WAF VIRTUAL PATCH',
@@ -838,7 +841,7 @@ function checkVulnMitigation(vulnId, mode, node) {
 
   if (mode === 'combined') {
     // Defense-in-depth: WAF + ML + Honeytokens
-    if (rule.waf && rule.waf.mitigates) {
+    if (!isNonHttpProtocol && rule.waf && rule.waf.mitigates) {
       return {
         addressed: true,
         badge: 'SHIELDED · WAF VIRTUAL PATCH',
@@ -1048,6 +1051,8 @@ const EXTERNAL_ENTRY_GROUPS = new Set(['ivanti-connect', 'pan-globalprotect', 'c
 let currentNodes = [];
 let currentWires = [];
 let savedAttackOrigins = [];
+let attackChoices = new Map();
+let simulationGeneration = 0;
 let activeTimeouts = [];
 let isSimulating = false;
 let runCount = 0;
@@ -1125,6 +1130,10 @@ function clearAllActiveTimeouts() {
 function layoutGraph() {
   const w = window.innerWidth;
   const h = window.innerHeight;
+  // Reserve space for the controls and node labels at the top and bottom.
+  const graphTop = Math.min(h * 0.4, document.querySelector('.top-bar').getBoundingClientRect().bottom + 65);
+  const graphBottom = Math.max(graphTop + 1, h - 65);
+  const graphHeight = graphBottom - graphTop;
   currentNodes = [];
   currentWires = [];
   nodesLayer.innerHTML = '';
@@ -1132,8 +1141,8 @@ function layoutGraph() {
 
   LAYER_CONFIG.forEach((layer, layerIdx) => {
     const numClusters = layer.clusters.length;
-    const clusterHeight = (h * 0.76) / numClusters;
-    const startY = h * 0.13;
+    const clusterHeight = graphHeight / numClusters;
+    const startY = graphTop;
 
     layer.clusters.forEach((cluster, clusterIdx) => {
       const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.025, h * 0.025);
@@ -1146,7 +1155,7 @@ function layoutGraph() {
         const familyRadiusX = rand(58, 76);
         const familyRadiusY = rand(44, 58);
         const anchorX = Math.max(w * 0.05, Math.min(w * 0.94, clusterCenterX + Math.cos(familyAngle) * familyRadiusX));
-        const anchorY = Math.max(h * 0.12, Math.min(h * 0.88, clusterCenterY + Math.sin(familyAngle) * familyRadiusY));
+        const anchorY = Math.max(graphTop, Math.min(graphBottom, clusterCenterY + Math.sin(familyAngle) * familyRadiusY));
 
         // Randomly denser forest: 1 to 3 instances of the SAME icon clustered together
         const maxVariants = targetDef.variants.length;
@@ -1164,7 +1173,7 @@ function layoutGraph() {
           }
 
           const nx = Math.max(w * 0.04, Math.min(w * 0.95, anchorX + ox));
-          const ny = Math.max(h * 0.11, Math.min(h * 0.89, anchorY + oy));
+          const ny = Math.max(graphTop, Math.min(graphBottom, anchorY + oy));
 
           // Only explicit per-variant product mappings are eligible. Versions and
           // vulnerable configurations are assumed for this synthetic scenario.
@@ -1307,6 +1316,7 @@ function drawAttackEntries(nodes) {
  * Resets the visual state of the existing infrastructure without rebuilding it.
  */
 function resetInfraVisuals() {
+  simulationGeneration++;
   clearAllActiveTimeouts();
 
   // Remove active wire packets and impact bursts
@@ -1387,7 +1397,8 @@ function triggerNodeDefense(node, wire, mitigation) {
   if (node.el) {
     node.el.classList.add('defended');
     const badgeText = mitigation.badge || 'CONTAINED';
-    const subText = mitigation.control ? `${node.kev.id} · [${mitigation.control}]` : `Mitigated ${node.kev.id}`;
+    const targetText = node.kev ? node.kev.id : 'SIMULATED ACCESS';
+    const subText = mitigation.control ? `${targetText} · [${mitigation.control}]` : `Mitigated ${targetText}`;
     node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
@@ -1402,6 +1413,7 @@ function triggerNodeDefense(node, wire, mitigation) {
 }
 
 function animateWirePulse(wire, onComplete) {
+  const generation = simulationGeneration;
   const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   pulse.setAttribute('r', '3.5');
   pulse.setAttribute('class', 'wire-packet');
@@ -1410,10 +1422,11 @@ function animateWirePulse(wire, onComplete) {
   wire.path.classList.add('active-wire');
 
   const pathEl = wire.path;
-  const duration = rand(360, 640);
+  const duration = 450;
   const startTime = performance.now();
 
   function step(time) {
+    if (generation !== simulationGeneration) return;
     const elapsed = time - startTime;
     const progress = Math.min(1, elapsed / duration);
     const point = pathEl.getPointAtLength(progress * pathEl.getTotalLength());
@@ -1445,6 +1458,9 @@ function generateNewInfra() {
   const startCount = randInt(1, 2);
   const origins = shuffle(ingressNodes).slice(0, startCount);
   savedAttackOrigins = origins.map(n => n.id);
+  attackChoices = new Map(currentNodes.map(node => [node.id,
+    shuffle(currentWires.filter(wire => wire.source.id === node.id)).slice(0, randInt(1, 2))
+  ]));
   drawAttackEntries(origins);
 
   runSimulationOnCurrentInfra();
@@ -1468,84 +1484,40 @@ function runSimulationOnCurrentInfra() {
     .map(id => currentNodes.find(n => n.id === id))
     .filter(Boolean);
 
-  const entriesToUse = startNodes;
-
-  entriesToUse.forEach((startNode, i) => {
-    inFlightOperations++;
-    safeTimeout(() => {
-      // Ingress node vulnerability mitigation check:
-      const ingressMitigation = checkVulnMitigation(startNode.kev && startNode.kev.id, currentMode, startNode);
-
-      if (ingressMitigation.addressed) {
-        // Vulnerability addressed right at perimeter (e.g. WAF virtual patch blocks CGI / auth bypass)
-        triggerNodeDefense(startNode, null, ingressMitigation);
-        decrementInFlight();
-      } else {
-        // Vulnerability unmitigated: ingress node is compromised
-        triggerNodeHit(startNode);
-        layerHits[0]++;
-        traverseFromNode(startNode, 1);
-        decrementInFlight();
-      }
-    }, 220 + i * 320);
-  });
-}
-
-function traverseFromNode(node, depth) {
-  if (depth > 3) return;
-  if (layerHits[depth] >= 3) return;
-
-  const outgoingWires = currentWires.filter(w => w.source.id === node.id && !w.target.hit && !w.target.defended);
-  if (outgoingWires.length === 0) return;
-
-  const remainingBudget = 3 - layerHits[depth];
-  if (remainingBudget <= 0) return;
-
-  // 1-2 chaining per step, capped to max 3 hits per layer
-  const chainCount = Math.min(remainingBudget, randInt(1, 2));
-  const selectedWires = shuffle(outgoingWires).slice(0, chainCount);
-
-  selectedWires.forEach((wire, idx) => {
-    inFlightOperations++;
-    const wireDelay = rand(280, 560) + idx * 180;
-    safeTimeout(() => {
-      animateWirePulse(wire, () => {
-        const target = wire.target;
-        if (target.hit || target.defended) {
-          decrementInFlight();
-          return;
-        }
-
-        // Domain-accurate vulnerability mitigation check for this target node & active scenario
-        const mitigation = checkVulnMitigation(target.kev && target.kev.id, currentMode, target);
-
-        if (mitigation.addressed) {
-          triggerNodeDefense(target, wire, mitigation);
-          decrementInFlight();
-        } else {
-          if (layerHits[depth] < 3) {
-            layerHits[depth]++;
-            wire.hit = true;
-            wire.path.classList.add('hit-wire');
-            const isFinalLake = target.layerIdx === 3;
-            triggerNodeHit(target, isFinalLake);
-
-            if (!isFinalLake) {
-              traverseFromNode(target, depth + 1);
-            }
-          }
-          decrementInFlight();
-        }
-      });
-    }, wireDelay);
-  });
-}
-
-function decrementInFlight() {
-  inFlightOperations = Math.max(0, inFlightOperations - 1);
-  if (inFlightOperations === 0) {
-    finalizeSimulation();
+  // Build the complete result synchronously in a stable order. Animation cannot
+  // affect the outcome, and all scenarios use the same chosen attack paths.
+  const queue = startNodes.map(node => ({ node, wire: null }));
+  const visited = new Set();
+  const hitsByLayer = [0, 0, 0, 0];
+  const events = [];
+  while (queue.length) {
+    const { node, wire } = queue.shift();
+    if (visited.has(node.id)) continue;
+    const mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
+    if (!mitigation.addressed && hitsByLayer[node.layerIdx] >= 3) continue;
+    visited.add(node.id);
+    events.push({ node, wire, mitigation });
+    if (!mitigation.addressed) {
+      hitsByLayer[node.layerIdx]++;
+      (attackChoices.get(node.id) || []).forEach(next => queue.push({ node: next.target, wire: next }));
+    }
   }
+
+  function playEvent(index) {
+    if (index >= events.length) { finalizeSimulation(); return; }
+    const { node, wire, mitigation } = events[index];
+    const apply = () => {
+      if (mitigation.addressed) triggerNodeDefense(node, wire, mitigation);
+      else {
+        if (wire) { wire.hit = true; wire.path.classList.add('hit-wire'); }
+        triggerNodeHit(node, node.layerIdx === 3);
+      }
+      safeTimeout(() => playEvent(index + 1), 120);
+    };
+    if (wire) animateWirePulse(wire, apply);
+    else safeTimeout(apply, 220);
+  }
+  playEvent(0);
 }
 
 function finalizeSimulation() {
@@ -1558,7 +1530,7 @@ function finalizeSimulation() {
     runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · DATA TARGET REACHED`;
   } else {
     runHud.className = 'contained';
-    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.blocks} BLOCKED AT BOUNDARY · ZERO-TRUST ARCHITECTURE PROTECTED DATABASES`;
+    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · DATA TARGET NOT REACHED`;
   }
 
   if (window._onSimulationDone) {
