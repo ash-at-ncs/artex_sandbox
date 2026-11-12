@@ -1,5 +1,11 @@
 # ARTEX Cyber Simulation Range: CISA KEV Threat Matrix
 
+> This matrix describes the original 12-CVE scenario, not the current wire diagram's object assignments. See [wire diagram logic](wire_diagram_logic.md) for the current layers, connections, and product-specific assignments. In `wire.html`, mapped CVEs assume a vulnerable version and configuration for the simulation, not a verified finding.
+
+The wire diagram shows illustrative attack-relevant service paths defined in `ALLOWED_CONNECTIONS`; it is not a discovered network map. Some accounts, security controls, monitoring systems, and other contextual objects have no modeled attack path and are intentionally unconnected. A compromise propagates along displayed paths only.
+
+Named examples include Ivanti Connect Secure (CVE-2023-46805), PAN-OS GlobalProtect (CVE-2024-3400), Citrix NetScaler ADC (CVE-2023-3519), and WSO2 API Manager (CVE-2022-29464). Their inclusion models affected deployments and does not assert that all versions or configurations are vulnerable.
+
 This document details the **12 CISA Known Exploited Vulnerabilities (KEVs)** modeled across the 4 architectural layers of the ARTEX Cyber Simulation Sandbox. These mappings are aligned with the Center for Threat-Informed Defense (CTID) ATT&CK-to-KEV framework from [`mitre-threat-vision-ncs`](https://github.com/kaligraeme/mitre-threat-vision-ncs).
 
 ---

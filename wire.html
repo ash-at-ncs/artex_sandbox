@@ -139,6 +139,23 @@
     pointer-events: auto;
   }
 
+  #connector-style-btn {
+    background: rgba(0, 30, 36, 0.85);
+    border: 1px solid var(--turquoise);
+    border-radius: 4px;
+    color: var(--turquoise);
+    cursor: pointer;
+    font: inherit;
+    font-size: 10px;
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
+  #connector-style-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
   #new-run-btn {
     pointer-events: auto;
     background: rgba(0, 30, 36, 0.85);
@@ -246,6 +263,20 @@
     stroke-width: 1.25;
     stroke-linecap: round;
     transition: stroke 0.4s ease, stroke-width 0.3s ease, filter 0.3s ease, stroke-opacity 0.4s ease;
+  }
+
+  .attack-entry {
+    fill: none;
+    stroke: #ff304f;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 9 6;
+    filter: drop-shadow(0 0 5px rgba(255, 34, 68, 0.75));
+  }
+
+  .attack-entry-head {
+    fill: #ff304f;
+    filter: drop-shadow(0 0 5px rgba(255, 34, 68, 0.75));
   }
 
   .wire.active-wire {
@@ -512,13 +543,14 @@
         <span class="run-icon">↻</span>
         <span>NEW INFRA</span>
       </button>
+      <button id="connector-style-btn" type="button" aria-pressed="false" title="Toggle curved connectors">CONNECTORS: STRAIGHT</button>
       <div id="run-hud">READY · SELECT SCENARIO & RUN SIMULATION</div>
     </div>
   </div>
 
   <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.4.0</span></a>
 
-  <!-- Fullscreen SVG for straight wires & pulses -->
+  <!-- Fullscreen SVG for wires & pulses -->
   <svg id="wire-svg"></svg>
 
   <!-- HTML nodes layer for GPU accelerated icon masking and text -->
@@ -529,7 +561,7 @@
 // Catalog of all 30 transparent icons
 const ICON_BASE = 'assets/diagram-icons/transparent/';
 
-// Ground-truth CISA KEV mappings strictly partitioned by architecture layer
+// CISA KEV catalog grouped by simulation layer; only explicit product mappings are assigned.
 const LAYER_KEVS = [
   // Layer 0: Perimeter & Cloud Ingress (T1190, T1068, T1059)
   [
@@ -551,26 +583,26 @@ const LAYER_KEVS = [
     { id: 'CVE-2024-1709', title: 'ScreenConnect Auth Bypass', tech: 'T1068' },
     { id: 'CVE-2021-26855', title: 'ProxyLogon Exchange SSRF', tech: 'T1190' },
     { id: 'CVE-2022-26923', title: 'Active Directory Certifried Spoofing', tech: 'T1068' },
-    { id: 'CVE-2023-29357', title: 'SharePoint OAuth Token Bypass', tech: 'T1552' }
+    { id: 'CVE-2023-29357', title: 'SharePoint OAuth Token Bypass', tech: 'T1552' },
+    { id: 'CVE-2022-29464', title: 'WSO2 API Arbitrary File Upload', tech: 'T1505' }
   ],
   // Layer 2: Microservices Mesh & Applications (T1059, T1210, T1505)
   [
     { id: 'CVE-2021-44228', title: 'Log4Shell JNDI Remote Code Execution', tech: 'T1059' },
     { id: 'CVE-2023-22527', title: 'Confluence OGNL Template Injection', tech: 'T1059' },
     { id: 'CVE-2022-22965', title: 'Spring4Shell Data Binding RCE', tech: 'T1190' },
-    { id: 'CVE-2022-29464', title: 'WSO2 API Arbitrary File Upload', tech: 'T1505' },
     { id: 'CVE-2023-2868', title: 'Barracuda ESG Command Injection', tech: 'T1059' },
     { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' },
     { id: 'CVE-2023-46604', title: 'ActiveMQ OpenWire Deserialization RCE', tech: 'T1059' },
-    { id: 'CVE-2022-46169', title: 'Cacti Unauth Command Injection RCE', tech: 'T1059' }
+    { id: 'CVE-2022-46169', title: 'Cacti Unauth Command Injection RCE', tech: 'T1059' },
+    { id: 'CVE-2023-34362', title: 'MOVEit Transfer SQL Injection', tech: 'T1190' },
+    { id: 'CVE-2023-0669', title: 'GoAnywhere MFT Deserialization RCE', tech: 'T1190' }
   ],
   // Layer 3: Backend Clustered Databases, Vaults & Repositories (T1041, T1003, T1005)
   [
-    { id: 'CVE-2023-34362', title: 'MOVEit Transfer SQLi Exfiltration', tech: 'T1041' },
     { id: 'CVE-2023-27350', title: 'PaperCut Setup Wizard DB Dump', tech: 'T1041' },
     { id: 'CVE-2020-1472', title: 'Zerologon Cryptographic Hash Dump', tech: 'T1003' },
     { id: 'CVE-2023-36884', title: 'Office Document File Exfiltration', tech: 'T1041' },
-    { id: 'CVE-2023-0669', title: 'GoAnywhere MFT Deserialization DB Dump', tech: 'T1041' },
     { id: 'CVE-2023-48788', title: 'FortiClient EMS SQLi Database Dump', tech: 'T1041' },
     { id: 'CVE-2022-47966', title: 'ManageEngine SAML RCE & PostgreSQL Dump', tech: 'T1041' },
     { id: 'CVE-2024-37085', title: 'VMware ESXi AD Bypass & VMFS Disk Dump', tech: 'T1005' },
@@ -743,6 +775,9 @@ const KEV_MITIGATION_RULES = {
  * Checks whether a given vulnerability can be addressed by the active mitigation scenario.
  */
 function checkVulnMitigation(vulnId, mode, node) {
+  if (!vulnId) {
+    return { addressed: false, badge: 'SIMULATED ACCESS', reason: 'No CVE is mapped to this asset; the path assumes access.' };
+  }
   if (mode === 'baseline') {
     return {
       addressed: false,
@@ -847,25 +882,28 @@ const LAYER_CONFIG = [
       {
         name: 'AWS Cloud Perimeter',
         targets: [
-          { id: 'aws-cloud', icon: 'public-cloud.png', matchingKevs: ['CVE-2024-4577', 'CVE-2022-1388'], variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
-          { id: 'aws-infra', icon: 'cloud-infrastructure.png', matchingKevs: ['CVE-2024-3400', 'CVE-2023-3519'], variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
-          { id: 'aws-vpn', icon: 'remote-access.png', matchingKevs: ['CVE-2023-46805', 'CVE-2022-42475'], variants: ['AWS Client VPN Gateway'] }
+          { id: 'aws-cloud', icon: 'public-cloud.png', variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
+          { id: 'aws-infra', icon: 'cloud-infrastructure.png', variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
+          { id: 'aws-vpn', icon: 'remote-access.png', variants: ['AWS Client VPN Gateway'] },
+          { id: 'ivanti-connect', icon: 'remote-access.png', kevByVariant: ['CVE-2023-46805'], variants: ['Ivanti Connect Secure VPN'] }
         ]
       },
       {
         name: 'Azure Enterprise',
         targets: [
-          { id: 'az-cloud', icon: 'public-cloud.png', matchingKevs: ['CVE-2024-4577', 'CVE-2022-1388'], variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
-          { id: 'az-net', icon: 'network.png', matchingKevs: ['CVE-2023-20198', 'CVE-2024-21887'], variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
-          { id: 'az-branch', icon: 'branch.png', matchingKevs: ['CVE-2023-46805', 'CVE-2022-42475'], variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] }
+          { id: 'az-cloud', icon: 'public-cloud.png', variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
+          { id: 'az-net', icon: 'network.png', variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
+          { id: 'az-branch', icon: 'branch.png', variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] },
+          { id: 'pan-globalprotect', icon: 'network.png', kevByVariant: ['CVE-2024-3400'], variants: ['PAN-OS GlobalProtect Gateway'] }
         ]
       },
       {
         name: 'GCP & Partners',
         targets: [
-          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', matchingKevs: ['CVE-2024-3400', 'CVE-2023-3519'], variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
-          { id: 'partner-gw', icon: 'partners.png', matchingKevs: ['CVE-2023-20198', 'CVE-2024-21887'], variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
-          { id: 'ext-surface', icon: 'attack-surface.png', matchingKevs: ['CVE-2024-4577', 'CVE-2023-3519'], variants: ['External Attack Surface'] }
+          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
+          { id: 'partner-gw', icon: 'partners.png', variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
+          { id: 'ext-surface', icon: 'attack-surface.png', variants: ['External Attack Surface'] },
+          { id: 'citrix-adc', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-3519'], variants: ['Citrix NetScaler ADC Gateway'] }
         ]
       }
     ]
@@ -877,24 +915,26 @@ const LAYER_CONFIG = [
       {
         name: 'API Gateways',
         targets: [
-          { id: 'cust-api', icon: 'api.png', matchingKevs: ['CVE-2023-38035', 'CVE-2021-26855'], variants: ['Customer REST GW #01', 'Customer REST GW #02', 'Customer REST GW #03'] },
-          { id: 'partner-api', icon: 'api.png', matchingKevs: ['CVE-2023-38035', 'CVE-2021-26855'], variants: ['Partner GraphQL Gateway', 'B2B Webhook Ingress', 'Partner Sync API'] },
-          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, matchingKevs: ['CVE-2021-26855', 'CVE-2023-38035'], variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] }
+          { id: 'cust-api', icon: 'api.png', variants: ['Customer REST GW #01', 'Customer REST GW #02', 'Customer REST GW #03'] },
+          { id: 'partner-api', icon: 'api.png', variants: ['Partner GraphQL Gateway', 'B2B Webhook Ingress', 'Partner Sync API'] },
+          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] },
+          { id: 'wso2-api', icon: 'api.png', kevByVariant: ['CVE-2022-29464'], variants: ['WSO2 API Manager'] }
         ]
       },
       {
         name: 'Identity & Access',
         targets: [
-          { id: 'iam-idp', icon: 'identity.png', matchingKevs: ['CVE-2023-4966', 'CVE-2022-26923'], variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
-          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, matchingKevs: ['CVE-2024-27198', 'CVE-2022-26923'], variants: ['Vault Secrets Store'] },
-          { id: 'sentry-auth', icon: 'endpoint.png', matchingKevs: ['CVE-2024-1709', 'CVE-2024-27198'], variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] }
+          { id: 'iam-idp', icon: 'identity.png', variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
+          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['Vault Secrets Store'] },
+          { id: 'sentry-auth', icon: 'endpoint.png', kevByVariant: ['CVE-2023-38035', 'CVE-2023-38035'], variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] },
+          { id: 'ad-identity', icon: 'identity.png', variants: ['Active Directory Domain Controller'] }
         ]
       },
       {
         name: 'Boundary Controls',
         targets: [
-          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, matchingKevs: ['CVE-2023-22515', 'CVE-2023-29357'], variants: ['WAF Threat Detection'] },
-          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, matchingKevs: ['CVE-2023-22515', 'CVE-2023-29357'], variants: ['Perimeter SOC Telemetry'] }
+          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, variants: ['WAF Threat Detection'] },
+          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, variants: ['Perimeter SOC Telemetry'] }
         ]
       }
     ]
@@ -906,88 +946,69 @@ const LAYER_CONFIG = [
       {
         name: 'Core Applications',
         targets: [
-          { id: 'app-engine', icon: 'application.png', matchingKevs: ['CVE-2022-29464', 'CVE-2022-30190'], variants: ['App Engine (Core)', 'App Engine (Billing)', 'App Engine (Checkout)'] },
-          { id: 'comp-registry', icon: 'components.png', matchingKevs: ['CVE-2023-46604', 'CVE-2022-46169'], variants: ['Container Registry'] },
-          { id: 'cicd-runner', icon: 'cicd.png', matchingKevs: ['CVE-2023-46604', 'CVE-2022-46169'], variants: ['CI/CD Pipeline Runner 01', 'CI/CD Pipeline Runner 02'] }
+          { id: 'app-engine', icon: 'application.png', variants: ['App Engine (Core)', 'App Engine (Billing)', 'App Engine (Checkout)'] },
+          { id: 'comp-registry', icon: 'components.png', variants: ['Container Registry'] },
+          { id: 'cicd-runner', icon: 'cicd.png', variants: ['CI/CD Pipeline Runner 01', 'CI/CD Pipeline Runner 02'] },
+          { id: 'moveit-sftp', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-34362', 'CVE-2023-0669'], variants: ['MOVEit Transfer (B2B EDI Integration)', 'GoAnywhere MFT (FinOps Data Exchange)'] }
         ]
       },
       {
         name: 'Internal Microservices',
         targets: [
-          { id: 'log4j-svc', icon: 'server-infrastructure.png', matchingKevs: ['CVE-2021-44228'], variants: ['Log4j Logging Node 01', 'Log4j Logging Node 02'] },
-          { id: 'spring-svc', icon: 'application.png', matchingKevs: ['CVE-2022-22965'], variants: ['Spring Boot Service A', 'Spring Boot Service B'] },
-          { id: 'confluence-node', icon: 'server-infrastructure.png', matchingKevs: ['CVE-2023-22527'], variants: ['Internal Confluence App'] }
+          { id: 'log4j-svc', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2021-44228', 'CVE-2021-44228'], variants: ['Service using Log4j 2 #01', 'Service using Log4j 2 #02'] },
+          { id: 'spring-svc', icon: 'application.png', kevByVariant: ['CVE-2022-22965', 'CVE-2022-22965'], variants: ['Spring MVC WAR (Tomcat / JDK 9+) A', 'Spring MVC WAR (Tomcat / JDK 9+) B'] },
+          { id: 'confluence-node', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-22527'], variants: ['Internal Confluence Data Center'] }
         ]
       },
       {
         name: 'AI & Operations',
         targets: [
-          { id: 'ai-core', icon: 'ai.png', matchingKevs: ['CVE-2022-29464', 'CVE-2023-2868'], variants: ['Predictive AI Core'] },
-          { id: 'iot-hub', icon: 'iot.png', matchingKevs: ['CVE-2023-2868', 'CVE-2022-46169'], variants: ['Telemetry IoT Ingestion'] },
-          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, matchingKevs: ['CVE-2022-30190', 'CVE-2023-46604'], variants: ['Vulnerability Scanner'] }
+          { id: 'ai-core', icon: 'ai.png', variants: ['Predictive AI Core'] },
+          { id: 'iot-hub', icon: 'iot.png', variants: ['Telemetry IoT Ingestion'] },
+          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, variants: ['Vulnerability Scanner'] }
         ]
       }
     ]
   },
   {
-    name: '04 / Backend Clustered Databases',
+    name: '04 / Data Stores & Secrets',
     xBand: [0.78, 0.92],
     clusters: [
       {
-        name: 'Database Cluster: Customer Records & Orders',
+        name: 'Data Stores: Customer Records & Orders',
         targets: [
           { 
             id: 'lake-cust', 
             icon: 'data.png', 
             isLake: true, 
-            isDb: true, 
-            matchingKevs: ['CVE-2023-24489', 'CVE-2023-36884'],
             variants: ['Customer Lake S3 (Parquet · Data Platform)', 'Customer Lake S3 (Curated · BI Team)', 'Customer Lake S3 (Cold Archive · Compliance)'] 
           },
           { 
             id: 'db-rds', 
             icon: 'server-infrastructure.png', 
-            isLake: true, 
             isDb: true, 
-            matchingKevs: ['CVE-2023-48788', 'CVE-2022-47966'],
             variants: ['Customer Postgres RDS (Primary · Core DBA)', 'Customer Postgres RDS (Replica 1 · Read Ops)', 'Customer MySQL RDS (Orders · Merchant Team)'] 
-          },
-          { 
-            id: 'moveit-sftp', 
-            icon: 'server-infrastructure.png', 
-            isLake: true, 
-            isDb: true, 
-            matchingKevs: ['CVE-2023-34362', 'CVE-2023-0669'],
-            variants: ['MOVEit SFTP Gateway (B2B EDI Integration)', 'GoAnywhere MFT (FinOps Data Exchange)'] 
           }
         ]
       },
       {
-        name: 'Database Cluster: Analytics, Document & Secrets',
+        name: 'Data Stores: Analytics, Document & Secrets',
         targets: [
           { 
             id: 'lake-ops', 
             icon: 'data.png', 
-            isLake: true, 
-            isDb: true, 
-            matchingKevs: ['CVE-2023-27350', 'CVE-2022-22954'],
             variants: ['Snowflake Warehouse (SnowSQL · Enterprise BI)', 'ClickHouse Telemetry Lake (SecOps Team)', 'BigQuery Analytics Lake (Marketing Data)'] 
           },
           { 
             id: 'nosql-doc', 
             icon: 'server-infrastructure.png', 
-            isLake: true, 
             isDb: true, 
-            matchingKevs: ['CVE-2022-26134', 'CVE-2024-1086'],
             variants: ['MongoDB Cluster (DocStore · Mobile App Team)', 'Redis Cache Cluster (In-Memory · Session Ops)', 'Cassandra DB (Streaming · Event Team)'] 
           },
           { 
             id: 'dc-vault', 
             icon: 'data-center.png', 
-            isLake: true, 
-            isDb: true, 
-            matchingKevs: ['CVE-2020-1472', 'CVE-2024-37085'],
-            variants: ['Core SAN Storage Vault (Storage Admin Team)', 'HashiCorp Vault Store (SecOps Secrets Team)', 'Active Directory NTDS Vault (Identity Team)'] 
+            variants: ['Core SAN Storage Vault (Storage Admin Team)', 'HashiCorp Vault Store (SecOps Secrets Team)']
           }
         ]
       }
@@ -995,11 +1016,39 @@ const LAYER_CONFIG = [
   }
 ];
 
+// Hypothetical attack-relevant service paths, expressed as source and target
+// families. These are scenario assumptions, not discovered network topology.
+// Accounts, telemetry, monitoring, and other context-only assets have no
+// attack-path wire unless an explicit service relationship is modeled here.
+const ALLOWED_CONNECTIONS = {
+  'aws-infra': ['cust-api', 'waf-proxy'],
+  'aws-vpn': ['sentry-auth'],
+  'ivanti-connect': ['cust-api'],
+  'az-net': ['cust-api', 'waf-proxy'],
+  'az-branch': ['sentry-auth'],
+  'pan-globalprotect': ['cust-api'],
+  'gcp-infra': ['cust-api', 'partner-api'],
+  'partner-gw': ['partner-api'],
+  'ext-surface': ['waf-proxy'],
+  'citrix-adc': ['wso2-api'],
+  'cust-api': ['app-engine', 'spring-svc', 'iot-hub'],
+  'partner-api': ['app-engine', 'iot-hub', 'moveit-sftp'],
+  'waf-proxy': ['app-engine', 'spring-svc', 'confluence-node'],
+  'wso2-api': ['app-engine', 'spring-svc', 'moveit-sftp'],
+  'sentry-auth': ['app-engine', 'spring-svc'],
+  'app-engine': ['lake-cust', 'db-rds', 'nosql-doc'],
+  'moveit-sftp': ['lake-cust'],
+  'spring-svc': ['db-rds', 'nosql-doc'],
+  'iot-hub': ['lake-ops', 'nosql-doc']
+};
+
+// Only these explicitly internet-facing gateways are eligible as entry points.
+const EXTERNAL_ENTRY_GROUPS = new Set(['ivanti-connect', 'pan-globalprotect', 'citrix-adc']);
+
 let currentNodes = [];
 let currentWires = [];
 let savedAttackOrigins = [];
 let activeTimeouts = [];
-let usedKevIdsPerLayer = [[], [], [], []];
 let isSimulating = false;
 let runCount = 0;
 let runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
@@ -1085,9 +1134,6 @@ function layoutGraph() {
     const numClusters = layer.clusters.length;
     const clusterHeight = (h * 0.76) / numClusters;
     const startY = h * 0.13;
-    const layerKevPool = shuffle(LAYER_KEVS[layerIdx]);
-    const assignedKevIdsInLayer = new Set();
-    let kevIdx = 0;
 
     layer.clusters.forEach((cluster, clusterIdx) => {
       const clusterCenterY = startY + clusterIdx * clusterHeight + clusterHeight * 0.5 + rand(-h * 0.025, h * 0.025);
@@ -1120,24 +1166,11 @@ function layoutGraph() {
           const nx = Math.max(w * 0.04, Math.min(w * 0.95, anchorX + ox));
           const ny = Math.max(h * 0.11, Math.min(h * 0.89, anchorY + oy));
 
-          // Select matching CISA KEV tailored to this infrastructure target
-          const targetKevIds = targetDef.matchingKevs || [];
-          const layerPool = LAYER_KEVS[layerIdx];
-          const candidateKevs = layerPool.filter(k => targetKevIds.includes(k.id));
-          const availableKevs = candidateKevs.filter(k => !assignedKevIdsInLayer.has(k.id));
-
-          let kev = null;
-          if (availableKevs.length > 0) {
-            kev = availableKevs[0];
-            assignedKevIdsInLayer.add(kev.id);
-          } else if (candidateKevs.length > 0) {
-            kev = candidateKevs[vIdx % candidateKevs.length];
-          } else {
-            const unusedInLayer = layerPool.filter(k => !assignedKevIdsInLayer.has(k.id));
-            kev = unusedInLayer.length > 0 ? unusedInLayer[0] : layerKevPool[kevIdx % layerKevPool.length];
-            assignedKevIdsInLayer.add(kev.id);
-            kevIdx++;
-          }
+          // Only explicit per-variant product mappings are eligible. Versions and
+          // vulnerable configurations are assumed for this synthetic scenario.
+          const kevId = (targetDef.kevByVariant || [])[vIdx];
+          const kev = kevId ? LAYER_KEVS[layerIdx].find(k => k.id === kevId) : null;
+          if (kevId && !kev) throw new Error(`Unknown CVE ${kevId} for ${targetDef.id}`);
 
           const node = {
             id: `${targetDef.id}-${vIdx + 1}`,
@@ -1165,39 +1198,26 @@ function layoutGraph() {
     });
   });
 
-  // Wires between layers
+  // Connect each source only to explicitly modeled service families.
   currentNodes.forEach(source => {
-    if (source.layerIdx < LAYER_CONFIG.length - 1) {
-      const nextLayerNodes = currentNodes.filter(n => n.layerIdx === source.layerIdx + 1);
-      const sortedCandidates = [...nextLayerNodes].sort((a, b) => Math.abs(a.y - source.y) - Math.abs(b.y - source.y));
-
-      const numConn = randInt(1, Math.min(2, sortedCandidates.length));
-      for (let i = 0; i < numConn; i++) {
-        const pickIdx = Math.min(sortedCandidates.length - 1, Math.floor(Math.pow(Math.random(), 1.5) * sortedCandidates.length));
-        const target = sortedCandidates[pickIdx];
-        if (target && !source.downstream.includes(target.id)) {
-          source.downstream.push(target.id);
-          createWire(source, target);
-        }
-      }
-    }
+    (ALLOWED_CONNECTIONS[source.groupId] || []).forEach(targetGroup => {
+      const candidates = currentNodes.filter(n => n.groupId === targetGroup && n.layerIdx === source.layerIdx + 1);
+      if (!candidates.length) return;
+      const target = candidates.reduce((a, b) => Math.abs(a.y - source.y) < Math.abs(b.y - source.y) ? a : b);
+      source.downstream.push(target.id);
+      createWire(source, target);
+    });
   });
 
-  // Ensure every node has ingress connection
+  // Connect remaining instances only when an approved predecessor exists.
   currentNodes.forEach(target => {
-    if (target.layerIdx > 0) {
-      const hasUpstream = currentWires.some(w => w.target.id === target.id);
-      if (!hasUpstream) {
-        const prevLayerNodes = currentNodes.filter(n => n.layerIdx === target.layerIdx - 1);
-        if (prevLayerNodes.length > 0) {
-          const source = prevLayerNodes.reduce((closest, curr) => 
-            Math.abs(curr.y - target.y) < Math.abs(closest.y - target.y) ? curr : closest
-          );
-          source.downstream.push(target.id);
-          createWire(source, target);
-        }
-      }
-    }
+    if (currentWires.some(w => w.target.id === target.id)) return;
+    const candidates = currentNodes.filter(n => n.layerIdx === target.layerIdx - 1 &&
+      (ALLOWED_CONNECTIONS[n.groupId] || []).includes(target.groupId));
+    if (!candidates.length) return;
+    const source = candidates.reduce((a, b) => Math.abs(a.y - target.y) < Math.abs(b.y - target.y) ? a : b);
+    source.downstream.push(target.id);
+    createWire(source, target);
   });
 
   // Render DOM Nodes with smaller icons
@@ -1205,6 +1225,9 @@ function layoutGraph() {
     const el = document.createElement('div');
     el.className = 'node';
     el.id = 'node-' + node.id;
+    el.title = node.kev
+      ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
+      : 'Simulated access: no CVE is assigned to this asset.';
     el.style.left = `${node.x}px`;
     el.style.top = `${node.y}px`;
 
@@ -1215,8 +1238,8 @@ function layoutGraph() {
       </div>
       <div class="node-label">${node.label}</div>
       <div class="node-kev">
-        <span class="cve">${node.kev.id}</span>
-        <span class="vuln-title">${node.kev.title}</span>
+        <span class="cve">${node.kev ? node.kev.id : 'SIMULATED ACCESS'}</span>
+        <span class="vuln-title">${node.kev ? node.kev.title : 'No CVE mapped to this asset'}</span>
       </div>
     `;
 
@@ -1233,25 +1256,50 @@ function layoutGraph() {
   window.currentWires = currentWires;
 }
 
-/**
- * Straight circuit lines between clusters
- */
+let curvedConnectors = false;
+
+function updateWirePath(wire) {
+  const { source, target, curve } = wire;
+  const d = curvedConnectors
+    ? `M ${source.x} ${source.y} C ${curve.p1x} ${curve.p1y}, ${curve.p2x} ${curve.p2y}, ${target.x} ${target.y}`
+    : `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+  wire.path.setAttribute('d', d);
+}
+
 function createWire(source, target) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('class', 'wire');
-
-  // Straight line connection
-  const d = `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  path.setAttribute('d', d);
-
   svg.appendChild(path);
-
-  currentWires.push({
+  const dx = target.x - source.x;
+  const wire = {
     source,
     target,
     path,
+    curve: {
+      p1x: source.x + dx * 0.5 + rand(-15, 15),
+      p1y: source.y + rand(-10, 10),
+      p2x: source.x + dx * 0.5 + rand(-15, 15),
+      p2y: target.y + rand(-10, 10)
+    },
     hit: false,
     defended: false
+  };
+  updateWirePath(wire);
+  currentWires.push(wire);
+}
+
+function drawAttackEntries(nodes) {
+  nodes.forEach(node => {
+    const endX = Math.max(8, node.x - 24);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('class', 'attack-entry');
+    line.setAttribute('d', `M -20 ${node.y} L ${endX} ${node.y}`);
+    svg.appendChild(line);
+
+    const head = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    head.setAttribute('class', 'attack-entry-head');
+    head.setAttribute('d', `M ${endX} ${node.y} l -11 -7 v 14 z`);
+    svg.appendChild(head);
   });
 }
 
@@ -1274,12 +1322,14 @@ function resetInfraVisuals() {
     node.defended = false;
     if (node.el) {
       node.el.className = 'node';
-      node.el.removeAttribute('title');
+      node.el.title = node.kev
+        ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
+        : 'Simulated access: no CVE is assigned to this asset.';
       const kevEl = node.el.querySelector('.node-kev');
       if (kevEl) {
         kevEl.innerHTML = `
-          <span class="cve">${node.kev.id}</span>
-          <span class="vuln-title">${node.kev.title}</span>
+          <span class="cve">${node.kev ? node.kev.id : 'SIMULATED ACCESS'}</span>
+          <span class="vuln-title">${node.kev ? node.kev.title : 'No CVE mapped to this asset'}</span>
         `;
       }
     }
@@ -1295,40 +1345,7 @@ function resetInfraVisuals() {
   runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
   inFlightOperations = 0;
   layerHits = [0, 0, 0, 0];
-  usedKevIdsPerLayer = [[], [], [], []];
   isSimulating = false;
-}
-
-/**
- * Returns a distinct CISA KEV tailored to the node's specific infrastructure icon/type,
- * guaranteeing that multiple compromises in the same layer never repeat the same vulnerability.
- */
-function getDistinctKevForNode(node) {
-  const layerIdx = node.layerIdx;
-  const layerPool = LAYER_KEVS[layerIdx] || [];
-  const targetKevIds = (node.targetDef && node.targetDef.matchingKevs) || [];
-  
-  // 1. First priority: KEVs that fit this exact infrastructure icon/type and haven't been used yet in this layer
-  const matchingCandidates = layerPool.filter(k => targetKevIds.includes(k.id));
-  const unusedMatching = matchingCandidates.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
-  
-  let chosen = null;
-  if (unusedMatching.length > 0) {
-    chosen = unusedMatching[0];
-  } else if (matchingCandidates.length > 0 && !usedKevIdsPerLayer[layerIdx].includes(node.kev.id)) {
-    chosen = node.kev;
-  } else {
-    // 2. Any unused KEV in this layer
-    const unusedInLayer = layerPool.filter(k => !usedKevIdsPerLayer[layerIdx].includes(k.id));
-    if (unusedInLayer.length > 0) {
-      chosen = unusedInLayer[0];
-    } else {
-      chosen = matchingCandidates.length > 0 ? matchingCandidates[0] : node.kev;
-    }
-  }
-  
-  usedKevIdsPerLayer[layerIdx].push(chosen.id);
-  return chosen;
 }
 
 function triggerNodeHit(node, isExfil = false) {
@@ -1336,9 +1353,7 @@ function triggerNodeHit(node, isExfil = false) {
   node.hit = true;
   runStats.hits++;
 
-  // Ensure each hacked node in the layer displays a distinct CISA KEV
-  const activeKev = getDistinctKevForNode(node);
-  node.activeKev = activeKev;
+  const activeKev = node.kev;
 
   if (node.el) {
     node.el.classList.add('hit');
@@ -1350,8 +1365,8 @@ function triggerNodeHit(node, isExfil = false) {
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
       kevEl.innerHTML = `
-        <span class="cve">${activeKev.id}</span>
-        <span class="vuln-title">${activeKev.title}</span>
+        <span class="cve">${activeKev ? activeKev.id : 'SIMULATED ACCESS'}</span>
+        <span class="vuln-title">${activeKev ? activeKev.title : 'No CVE mapped to this asset'}</span>
       `;
     }
 
@@ -1395,14 +1410,13 @@ function animateWirePulse(wire, onComplete) {
   wire.path.classList.add('active-wire');
 
   const pathEl = wire.path;
-  const totalLength = pathEl.getTotalLength();
   const duration = rand(360, 640);
   const startTime = performance.now();
 
   function step(time) {
     const elapsed = time - startTime;
     const progress = Math.min(1, elapsed / duration);
-    const point = pathEl.getPointAtLength(progress * totalLength);
+    const point = pathEl.getPointAtLength(progress * pathEl.getTotalLength());
 
     pulse.setAttribute('cx', point.x);
     pulse.setAttribute('cy', point.y);
@@ -1427,9 +1441,11 @@ function generateNewInfra() {
   layoutGraph();
 
   // Select 1-2 persistent ingress entry points for this infrastructure topology
-  const ingressNodes = currentNodes.filter(n => n.layerIdx === 0);
+  const ingressNodes = currentNodes.filter(n => EXTERNAL_ENTRY_GROUPS.has(n.groupId) && n.downstream.length > 0);
   const startCount = randInt(1, 2);
-  savedAttackOrigins = shuffle(ingressNodes).slice(0, startCount).map(n => n.id);
+  const origins = shuffle(ingressNodes).slice(0, startCount);
+  savedAttackOrigins = origins.map(n => n.id);
+  drawAttackEntries(origins);
 
   runSimulationOnCurrentInfra();
 }
@@ -1452,13 +1468,13 @@ function runSimulationOnCurrentInfra() {
     .map(id => currentNodes.find(n => n.id === id))
     .filter(Boolean);
 
-  const entriesToUse = startNodes.length > 0 ? startNodes : currentNodes.filter(n => n.layerIdx === 0).slice(0, 1);
+  const entriesToUse = startNodes;
 
   entriesToUse.forEach((startNode, i) => {
     inFlightOperations++;
     safeTimeout(() => {
       // Ingress node vulnerability mitigation check:
-      const ingressMitigation = checkVulnMitigation(startNode.kev.id, currentMode, startNode);
+      const ingressMitigation = checkVulnMitigation(startNode.kev && startNode.kev.id, currentMode, startNode);
 
       if (ingressMitigation.addressed) {
         // Vulnerability addressed right at perimeter (e.g. WAF virtual patch blocks CGI / auth bypass)
@@ -1501,7 +1517,7 @@ function traverseFromNode(node, depth) {
         }
 
         // Domain-accurate vulnerability mitigation check for this target node & active scenario
-        const mitigation = checkVulnMitigation(target.kev.id, currentMode, target);
+        const mitigation = checkVulnMitigation(target.kev && target.kev.id, currentMode, target);
 
         if (mitigation.addressed) {
           triggerNodeDefense(target, wire, mitigation);
@@ -1513,40 +1529,6 @@ function traverseFromNode(node, depth) {
             wire.path.classList.add('hit-wire');
             const isFinalLake = target.layerIdx === 3;
             triggerNodeHit(target, isFinalLake);
-
-            // Multi-instance target group compromise: 1 or 2 get hacked by distinct vulns
-            if (target.groupId && layerHits[depth] < 3 && Math.random() < 0.45) {
-              const siblings = currentNodes.filter(n => n.groupId === target.groupId && n.id !== target.id && !n.hit && !n.defended);
-              if (siblings.length > 0) {
-                const siblingVic = shuffle(siblings)[0];
-                safeTimeout(() => {
-                  if (layerHits[depth] < 3 && !siblingVic.hit) {
-                    layerHits[depth]++;
-                    triggerNodeHit(siblingVic, target.isLake);
-                  }
-                }, 220);
-              }
-            }
-
-            // Backend Clustered Database Lateral Compromise:
-            // "when it hacks more than 1, pick a different KEV, we have a few per layer"
-            if (isFinalLake && target.isDb) {
-              const clusterPeers = currentNodes.filter(n => 
-                n.layerIdx === 3 && n.clusterName === target.clusterName && n.id !== target.id && !n.hit && !n.defended
-              );
-              const extraDbCount = Math.min(randInt(1, 2), 3 - layerHits[3]);
-              if (extraDbCount > 0 && clusterPeers.length > 0) {
-                const victims = shuffle(clusterPeers).slice(0, extraDbCount);
-                victims.forEach((vic, vIdx) => {
-                  safeTimeout(() => {
-                    if (layerHits[3] < 3) {
-                      layerHits[3]++;
-                      triggerNodeHit(vic, true);
-                    }
-                  }, 260 + vIdx * 180);
-                });
-              }
-            }
 
             if (!isFinalLake) {
               traverseFromNode(target, depth + 1);
@@ -1573,7 +1555,7 @@ function finalizeSimulation() {
   const scn = DEFENSE_SCENARIOS[currentMode] || DEFENSE_SCENARIOS.baseline;
   if (runStats.lakesBreached > 0) {
     runHud.className = 'breached';
-    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} KEVs EXPLOITED · ${runStats.blocks} CONTAINED · DATABASE CLUSTER COMPROMISED`;
+    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · DATA TARGET REACHED`;
   } else {
     runHud.className = 'contained';
     runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.blocks} BLOCKED AT BOUNDARY · ZERO-TRUST ARCHITECTURE PROTECTED DATABASES`;
@@ -1592,6 +1574,14 @@ function finalizeSimulation() {
 }
 
 // Bind 4 mode scenario buttons: tests the SAME infrastructure with SAME vulns
+const connectorStyleBtn = document.getElementById('connector-style-btn');
+connectorStyleBtn.addEventListener('click', () => {
+  curvedConnectors = !curvedConnectors;
+  connectorStyleBtn.setAttribute('aria-pressed', String(curvedConnectors));
+  connectorStyleBtn.textContent = `CONNECTORS: ${curvedConnectors ? 'CURVED' : 'STRAIGHT'}`;
+  currentWires.forEach(updateWirePath);
+});
+
 const modeButtons = document.querySelectorAll('.mode-btn');
 modeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
