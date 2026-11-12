@@ -52,3 +52,40 @@ The diagram does not inventory versions or verify configuration: the table recor
 4. Exercise randomized layouts: check all generated wires against the allowlist, mapped CVEs against their variant, and selected entry arrows against the external-entry set; verify at least one route from each selected entry to a data target. Recheck behavior after switching scenarios, changing connector style, regenerating infrastructure and resizing.
 
 Mitigation outcomes are simplified scenario rules, not validated product efficacy. A permitted edge is an assumed attack path and does not independently prove that a CVE can be exploited across it. Manual node clicks can mark an object hit outside automatic propagation. The simulation does not model all trust, protocol, access-control, monitoring or deployment details.
+# Additional modeled products and path assumptions
+
+The expanded catalog also includes FortiOS CVE-2018-13379, Pulse Connect Secure
+CVE-2019-11510, Apache HTTP Server CVE-2021-42013, Exchange CVE-2021-26855,
+Ivanti EPM CVE-2024-29824, Confluence CVE-2023-22515, and WebLogic
+CVE-2020-14882. The data tier includes Debian-packaged Redis CVE-2022-0543,
+SQL Server Reporting Services CVE-2020-0618, and FortiClient EMS
+CVE-2023-48788. These are assumed vulnerable product deployments. Apache
+traversal requires a vulnerable configuration (CGI for code execution);
+Redis is specifically the affected Debian package and requires access to Redis;
+the reporting-service scenario assumes any necessary privileges; EMS is the
+affected application with a SQL backend, not a vulnerability in SQL Server.
+The model assumes the intervening network reachability and credentials required
+for each hop; it does not simulate them or guarantee exfiltration.
+References: [Redis](https://nvd.nist.gov/vuln/detail/CVE-2022-0543),
+[reporting services](https://nvd.nist.gov/vuln/detail/CVE-2020-0618),
+[Ivanti EPM](https://nvd.nist.gov/vuln/detail/CVE-2024-29824),
+[Apache HTTP Server](https://nvd.nist.gov/vuln/detail/CVE-2021-42013),
+[Pulse Connect Secure](https://nvd.nist.gov/vuln/detail/CVE-2019-11510), and
+[CISA's exploited-vulnerability advisory](https://www.cisa.gov/sites/default/files/2023-08/aa23-215a_joint_csa_2022_top_routinely_exploited_vulnerabilities.pdf).
+
+The wire simulation includes vulnerable instances of F5 BIG-IP (CVE-2022-1388),
+JetBrains TeamCity (CVE-2023-42793), Apache ActiveMQ (CVE-2023-46604), and
+Cacti (CVE-2022-46169). Affected versions and configurations are assumed, not
+detected. Sources: [CISA F5 advisory](https://www.cisa.gov/sites/default/files/publications/AA22-138A-Threat_Actors_Exploiting_F5_BIG-IP_CVE-2022-1388_F5.pdf),
+[CISA TeamCity advisory](https://www.cisa.gov/sites/default/files/2023-12/aa23-347a-russian-foreign-intelligence-service-svr-exploiting-jetbrains-teamcity-cve-globally_0.pdf),
+[CISA ActiveMQ catalog announcement](https://content.govdelivery.com/accounts/USDHSCISA/bulletins/3790dfb), and
+[NVD Cacti record](https://nvd.nist.gov/vuln/detail/CVE-2022-46169).
+
+These are hypothetical service relationships: the F5 management interface is
+exposed and fronts API services; the API services can reach the ActiveMQ broker;
+and the identity gateway gives access to internal TeamCity and Cacti services.
+The final connections assume the broker, build service, or monitoring service
+has credentials or integration access to its respective data target. A wire
+represents that assumed reachability, not proof that exploitation automatically
+grants the next hop. The simulation does not model credentials, network rules,
+or exploit prerequisites in detail.
