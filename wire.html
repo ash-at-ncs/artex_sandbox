@@ -1374,6 +1374,25 @@ function layoutGraph(snapshot = null) {
   currentNodes = currentNodes.filter(node => reachable.has(node.id));
   currentNodes.forEach(node => { node.downstream = node.downstream.filter(id => reachable.has(id)); });
 
+  // These pools represent overlapping controls, rather than distinct service
+  // instances such as API gateways, applications, and data platforms. Labels
+  // describe the demo inventory; they do not change the simulation topology.
+  const overlappingControls = new Set(['waf-proxy', 'iam-idp', 'threat-det']);
+  const controlCounts = new Map();
+  currentNodes.forEach(node => {
+    node.label = node.label.replace(/ · (?:Decommissioned|P\.o\.C)$/, '');
+    if (overlappingControls.has(node.groupId)) {
+      const position = (controlCounts.get(node.groupId) || 0) + 1;
+      controlCounts.set(node.groupId, position);
+      if (position === 2) node.label += ' · Decommissioned';
+      if (position === 3) node.label += ' · P.o.C';
+    }
+  });
+  if (currentNodes.some(node => node.groupId === 'confluence-node')) {
+    const olderConfluence = currentNodes.find(node => node.groupId === 'confluence-admin');
+    if (olderConfluence) olderConfluence.label += ' · Decommissioned';
+  }
+
   // Render DOM Nodes with smaller icons
   currentNodes.forEach(node => {
     const el = document.createElement('div');
