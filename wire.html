@@ -310,7 +310,6 @@
     align-items: center;
     justify-content: center;
     pointer-events: auto;
-    cursor: pointer;
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -416,6 +415,11 @@
     font-weight: 600;
   }
 
+  /* A deployed decoy remains visibly distinct before and after a trigger. */
+  .node.canary .node-icon { background-color: #ffd83d; filter: drop-shadow(0 0 9px #ffd83d); }
+  .node.canary .node-halo { border-color: #ffd83d; opacity: 0.85; box-shadow: 0 0 10px rgba(255,216,61,.5); }
+  .node.canary .node-label { color: #ffe45c; }
+
   /* HIT STATE: Lit in RED */
   .node.hit .node-icon {
     background-color: var(--red);
@@ -514,6 +518,19 @@
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(5.5); opacity: 0; }
   }
+  /* Small incident-ticket drum in the bottom-right corner. */
+  .soc-ticker { position: fixed; z-index: 30; right: 8px; bottom: 8px; width: clamp(170px, 14vw, 225px); height: 108px; overflow: hidden; pointer-events: none; font: 10px Arial, sans-serif; }
+  .soc-cards { display: flex; flex-direction: column; gap: 0; }
+  .soc-cards { transition: transform 2.8s ease-in-out; }
+  .soc-cards.looping { transition: none; animation: socLoop var(--soc-loop-duration) linear infinite; }
+  @keyframes socLoop { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+  .soc-card { flex: 0 0 36px; height: 36px; box-sizing: border-box; overflow: hidden; background: #fff; border: 1px solid #2871b9; border-left: 3px solid #2871b9; color: #132d48; padding: 2px 5px; }
+  .soc-card-head { display: flex; justify-content: space-between; gap: 4px; font-weight: bold; border-bottom: 1px solid #9cbfe0; padding-bottom: 2px; }
+  .soc-title, .soc-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .soc-detail { margin-top: 2px; color: #284967; font-size: 9px; }
+  .soc-severity { flex: none; font-size: 9px; color: #a12e24; }
+  .soc-empty { color: #58728c; }
+  @media (prefers-reduced-motion: reduce) { .soc-cards { transition: none; } .soc-cards.looping { animation: none; } }
 </style>
 </head>
 <body>
@@ -553,6 +570,10 @@
 
   <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.4.0</span></a>
 
+  <div class="soc-ticker" aria-label="Simulated SOC tickets">
+    <div id="soc-cards" class="soc-cards" aria-live="off"></div>
+  </div>
+
   <!-- Fullscreen SVG for wires & pulses -->
   <svg id="wire-svg"></svg>
 
@@ -561,6 +582,71 @@
 </div>
 
 <script>
+// Tickets are illustrative scenario events; severity is estimated, not a CVSS score.
+const socTickets = new Map();
+let socLooping = false;
+function renderSocTickets() {
+  const cards = document.getElementById('soc-cards');
+  const tickets = [...socTickets.values()];
+  cards.replaceChildren();
+  const loop = socLooping && tickets.length > 3;
+  cards.classList.toggle('looping', loop);
+  cards.style.setProperty('--soc-loop-duration', `${Math.max(24, tickets.length * 5)}s`);
+  cards.style.transform = loop ? '' : `translateY(-${Math.max(0, tickets.length - 3) * 36}px)`;
+  const displayed = loop ? [...tickets, ...tickets] : tickets;
+  displayed.forEach((ticket, index) => {
+    const card = document.createElement('div');
+    card.className = 'soc-card';
+    if (index >= tickets.length) card.setAttribute('aria-hidden', 'true');
+    const head = document.createElement('div'); head.className = 'soc-card-head';
+    const title = document.createElement('span'); title.className = 'soc-title'; title.textContent = ticket.title;
+    const severity = document.createElement('span'); severity.className = 'soc-severity'; severity.textContent = ticket.severity;
+    const detail = document.createElement('div'); detail.className = 'soc-detail'; detail.textContent = ticket.detail;
+    head.append(title, severity); card.append(head, detail); cards.appendChild(card);
+  });
+}
+function recordSocTicket(node, mitigation, probeOnly = false) {
+  const existing = socTickets.get(node.id);
+  const count = (existing?.count || 0) + 1;
+  const succeeded = !probeOnly && !mitigation.addressed;
+  // Choose the SIEM-style description once per object when its attack succeeds.
+  const siemStyle = existing?.siemStyle ?? (succeeded ? Math.random() < 0.5 : null);
+  let detail;
+  if (mitigation.badge?.includes('CANARY')) {
+    detail = `Decoy access detected on ${node.label}`;
+  } else if (node.targetDef.publicExposure) {
+    detail = succeeded ? `Anonymous access observed on ${node.label}` : `Anonymous access request to ${node.label}`;
+  } else if (!node.kev) {
+    detail = `Unusual account access to ${node.label}`;
+  } else if (mitigation.badge?.includes('WAF')) {
+    detail = `WAF rule match on ${node.label} · ${node.kev.id}`;
+  } else if (succeeded && siemStyle) {
+    if (node.layerIdx === 3) detail = `Suspicious data access on ${node.label} · ${node.kev.id}`;
+    else if (node.layerIdx === 2) detail = `Suspicious application activity on ${node.label} · ${node.kev.id}`;
+    else detail = `Suspicious access to ${node.label} · ${node.kev.id}`;
+  } else {
+    detail = `Suspected ${node.kev.title} attempt · ${node.kev.id}`;
+  }
+  let severity = existing?.severity || ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)];
+  if (succeeded && siemStyle && !existing?.breachEvaluated) {
+    severity = Math.random() < 0.75 ? 'HIGH' : 'CRITICAL';
+  }
+  const ticketCount = Math.random() < 0.5 ? 1 : 1 + Math.floor(Math.random() * 6);
+  for (let i = 0; i < ticketCount; i++) {
+    const ticketDetail = i === 0 ? detail : `${detail} · alert ${i + 1}`;
+    socTickets.set(`${node.id}-${i}`, { title: node.label, severity, detail: ticketDetail });
+  }
+  if (mitigation.badge?.includes('WAF VIRTUAL PATCH')) {
+    socTickets.set(`${node.id}-waf-response`, { title: 'Virtual patch block', severity: 'MEDIUM', detail: `WAF blocked request to ${node.label}` });
+  } else if (mitigation.badge?.includes('AGENTIC SOAR')) {
+    socTickets.set(`${node.id}-soar-response`, { title: 'SOAR containment', severity: 'HIGH', detail: `Response action contained activity on ${node.label}` });
+  } else if (mitigation.badge?.includes('CANARY')) {
+    socTickets.set(`${node.id}-canary-response`, { title: 'Canary alert', severity: 'HIGH', detail: `Decoy access detected at ${node.label}` });
+    socTickets.set(`${node.id}-soar-response`, { title: 'SOAR containment', severity: 'HIGH', detail: `Playbook contained session at ${node.label}` });
+  }
+  renderSocTickets();
+}
+
 // Catalog of all 30 transparent icons
 const ICON_BASE = 'assets/diagram-icons/transparent/';
 
@@ -616,6 +702,8 @@ const LAYER_KEVS = [
     { id: 'CVE-2022-30190', title: 'MSDT Follina Command RCE', tech: 'T1059' },
     { id: 'CVE-2023-46604', title: 'ActiveMQ OpenWire Deserialization RCE', tech: 'T1059' },
     { id: 'CVE-2022-46169', title: 'Cacti Unauth Command Injection RCE', tech: 'T1059' },
+    { id: 'CVE-2022-29712', title: 'LibreNMS service parameter command injection', tech: 'T1059' },
+    { id: 'CVE-2021-35225', title: 'SolarWinds NPM information disclosure', tech: 'T1552' },
     { id: 'CVE-2023-42793', title: 'TeamCity Authentication Bypass', tech: 'T1190' },
     { id: 'CVE-2020-14882', title: 'Oracle WebLogic Console Access Bypass', tech: 'T1190' },
     { id: 'CVE-2023-22515', title: 'Confluence Broken Access Control', tech: 'T1190' },
@@ -851,15 +939,6 @@ function wafPortalCovered(node) {
   return (hash >>> 0) / 4294967296 < WAF_PORTAL_COVERAGE;
 }
 
-function edgeSoarDetects(node) {
-  let hash = (0x85ebca6b ^ soarSeed) >>> 0;
-  for (const char of node.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-  hash ^= hash >>> 16; hash = Math.imul(hash, 0x7feb352d);
-  hash ^= hash >>> 15; hash = Math.imul(hash, 0x846ca68b);
-  hash ^= hash >>> 16;
-  return (hash >>> 0) / 4294967296 < EDGE_SOAR_DETECTION_RATE;
-}
-
 function checkVulnMitigation(vulnId, mode, node) {
   if (node.vulnerabilityAssigned === false) {
     return { addressed: true, noAssignedVulnerability: true, badge: 'NO FINDING', reason: 'No exploitable exposure was assigned to this asset in this infrastructure.' };
@@ -888,8 +967,8 @@ function checkVulnMitigation(vulnId, mode, node) {
   }
 
   const rule = KEV_MITIGATION_RULES[vulnId] || {
-    waf: { mitigates: node.layerIdx <= 1, control: 'NIST SI-2', reason: 'Perimeter filtering rule' },
-    ml:  { mitigates: node.layerIdx >= 1, control: 'NIST SI-4', reason: 'Internal anomaly detection' }
+    waf: { mitigates: false, reason: 'No specific virtual patch is modeled for this vulnerability.' },
+    ml: { mitigates: false, reason: 'No specific detection and response is modeled for this vulnerability.' }
   };
   const isNonHttpProtocol = ['aws-vpn', 'az-net', 'az-branch', 'partner-gw'].includes(node.groupId);
   // These web portals may or may not be behind an inline WAF in each generated
@@ -897,10 +976,8 @@ function checkVulnMitigation(vulnId, mode, node) {
   const portalIds = ['forti-vpn', 'pulse-vpn', 'pan-globalprotect'];
   const portalCovered = !portalIds.includes(node.groupId) || wafPortalCovered(node);
   const wafMitigates = !isNonHttpProtocol && portalCovered && rule.waf?.mitigates;
-  // SOAR can also receive telemetry from monitored perimeter web portals.
-  // The modeled sensor shares the same inline placement as the WAF.
-  const edgeSoarMitigates = node.layerIdx === 0 && (!portalIds.includes(node.groupId) || portalCovered) && edgeSoarDetects(node);
-  const soarMitigates = edgeSoarMitigates || (rule.ml?.mitigates && soarDetects(node));
+  // A response requires the specific modeled detection and a successful detection outcome.
+  const soarMitigates = !!rule.ml?.mitigates && soarDetects(node);
 
   if (mode === 'patch') {
     // WAF only inspects HTTP/HTTPS traffic: completely blind to VPNs, SD-WAN, and private peered links
@@ -933,7 +1010,7 @@ function checkVulnMitigation(vulnId, mode, node) {
         addressed: true,
         badge: 'CONTAINED · AGENTIC SOAR',
         control: rule.ml.control,
-        reason: edgeSoarMitigates ? 'Simulation assumption: SOAR detects anomalous activity using monitored portal telemetry.' : rule.ml.reason
+        reason: rule.ml.reason
       };
     }
     return {
@@ -958,7 +1035,7 @@ function checkVulnMitigation(vulnId, mode, node) {
         addressed: true,
         badge: 'CONTAINED · AGENTIC SOAR',
         control: rule.ml.control,
-        reason: edgeSoarMitigates ? 'Simulation assumption: SOAR detects anomalous activity using monitored portal telemetry.' : rule.ml.reason
+        reason: rule.ml.reason
       };
     }
     return {
@@ -1068,7 +1145,7 @@ const LAYER_CONFIG = [
         targets: [
           { id: 'ai-core', icon: 'ai.png', kevByVariant: ['CVE-2026-42271'], variants: ['LiteLLM Proxy 1.83.6 · API key assumed'] },
           { id: 'iot-hub', icon: 'iot.png', kevByVariant: ['CVE-2021-44228'], variants: ['IoT Ingestion using Log4j 2'] },
-          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, kevByVariant: ['CVE-2022-46169'], variants: ['Cacti Network Monitoring Server'] }
+          { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, productPool: true, maxInstances: 1, includeChance: 0.9, kevByVariant: ['CVE-2022-46169', 'CVE-2022-29712', 'CVE-2021-35225', null, null, null], variants: ['Cacti Network Monitoring Server', 'LibreNMS 22.3.0', 'SolarWinds NPM 2020.2.6', 'Zabbix Network Monitor', 'PRTG Network Monitor', 'ManageEngine OpManager'] }
         ]
       }
     ]
@@ -1157,7 +1234,6 @@ const EXTERNAL_ENTRY_GROUPS = new Set(['ivanti-connect', 'pan-globalprotect', 'c
 
 const ASSET_EXPOSURE_CHANCE = [0.80, 0.80, 0.80, 0.80]; // Synthetic, per asset; selected once per infrastructure.
 const WAF_PORTAL_COVERAGE = 0.66; // Fraction of modeled public web portals behind a virtual-patching WAF.
-const EDGE_SOAR_DETECTION_RATE = 0.975; // Synthetic detection where portal telemetry is available.
 const SOAR_DETECTION_RATE = 0.32; // Synthetic per-eligible-node detection, calibrated across layouts.
 let soarSeed = 0;
 let currentNodes = [];
@@ -1274,6 +1350,7 @@ function layoutGraph(snapshot = null) {
 
       const numTargets = cluster.targets.length;
       cluster.targets.forEach((targetDef, targetIdx) => {
+        if (targetDef.includeChance != null && Math.random() >= targetDef.includeChance) return;
         // Target family center anchor
         const familyAngle = (targetIdx / numTargets) * Math.PI * 2 - Math.PI / 2 + rand(-0.08, 0.08);
         const familyRadiusX = rand(58, 76);
@@ -1283,7 +1360,7 @@ function layoutGraph(snapshot = null) {
 
         // Randomly denser forest: 1 to 3 instances of the SAME icon clustered together
         const maxVariants = targetDef.variants.length;
-        const instanceCount = maxVariants > 1 ? randInt(1, Math.min(3, maxVariants)) : 1;
+        const instanceCount = maxVariants > 1 ? randInt(1, Math.min(targetDef.maxInstances ?? 3, maxVariants)) : 1;
 
         const variants = targetDef.productPool
           ? shuffle(Array.from({ length: maxVariants }, (_, index) => index)).slice(0, instanceCount)
@@ -1418,16 +1495,12 @@ function layoutGraph(snapshot = null) {
       </div>
     `;
 
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      triggerNodeHit(node);
-    });
-
     nodesLayer.appendChild(el);
     node.el = el;
   });
 
   window.currentNodes = currentNodes;
+  renderSocTickets();
   window.currentWires = currentWires;
 }
 
@@ -1465,6 +1538,9 @@ function drawAttackEntries(nodes) {
  * Resets the visual state of the existing infrastructure without rebuilding it.
  */
 function resetInfraVisuals() {
+  socLooping = false;
+  socTickets.clear();
+  renderSocTickets();
   simulationGeneration++;
   clearAllActiveTimeouts();
 
@@ -1484,6 +1560,7 @@ function resetInfraVisuals() {
     node.defended = false;
     if (node.el) {
       node.el.className = 'node';
+      node.el.querySelector('.node-label').textContent = node.label;
       node.el.title = node.vulnerabilityAssigned === false ? 'No exploitable exposure assigned in this simulated infrastructure.' : (node.targetDef.publicExposure && `${node.targetDef.attackTechnique} · ${node.targetDef.attackDescription}\n${node.targetDef.publicExposure}`) || (node.kev
         ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
         : node.targetDef.vulnerabilityChance != null
@@ -1556,7 +1633,7 @@ function triggerNodeDefense(node, wire, mitigation) {
   if (node.el) {
     node.el.classList.add('defended');
     const badgeText = mitigation.badge || 'CONTAINED';
-    const targetText = node.kev ? node.kev.id : node.targetDef.publicExposure ? `${node.targetDef.attackTechnique} · PUBLIC ACCESS` : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
+    const targetText = mitigation.badge?.includes('CANARY') ? 'DECOY ACCESS' : node.kev ? node.kev.id : node.targetDef.publicExposure ? `${node.targetDef.attackTechnique} · PUBLIC ACCESS` : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
     const subText = mitigation.control ? `${targetText} · [${mitigation.control}]` : `Mitigated ${targetText}`;
     node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
@@ -1719,31 +1796,18 @@ function runSimulationOnCurrentInfra() {
 
   // Build the complete result synchronously in a stable order. Animation cannot
   // affect the outcome, and all scenarios use the same chosen attack paths.
-  // Place at most one canary on a route that can pass the same WAF and SOAR
-  // rules used by all other attacks. A canary is triggered in half of eligible runs.
-  function findCanaryPath(node, path = []) {
-    if (checkVulnMitigation(node.kev && node.kev.id, 'baseline', node).addressed) return null;
-    const nextPath = [...path, node];
-    if (node.layerIdx === 3) return nextPath;
-    if (checkVulnMitigation(node.kev && node.kev.id, 'combined', node).addressed) return null;
-    const preferred = attackChoices.get(node.id) || [];
-    const candidates = [...preferred, ...currentWires.filter(wire => wire.source.id === node.id && !preferred.includes(wire))];
-    for (const wire of candidates) {
-      const found = findCanaryPath(wire.target, nextPath);
-      if (found) return found;
-    }
-    return node.layerIdx === 2 && !checkVulnMitigation(node.kev && node.kev.id, 'combined', node).addressed ? nextPath : null;
+  // Replace one reachable backend asset with a decoy for the combined scenario.
+  // Its position is deterministic for this infrastructure; reaching it triggers
+  // a simulated alert and automated containment, without bypassing earlier layers.
+  const canaryTarget = currentMode === 'combined'
+    ? currentNodes.filter(node => node.layerIdx === 3 && currentWires.some(wire => wire.target.id === node.id))
+        .sort((a, b) => a.id.localeCompare(b.id))[0]
+    : null;
+  if (canaryTarget?.el) {
+    canaryTarget.el.classList.add('canary');
+    canaryTarget.el.querySelector('.node-label').textContent = 'CANARY · Decoy backend';
+    canaryTarget.el.title = 'Canary decoy: access generates an alert and triggers simulated automated containment.';
   }
-  const viablePath = startNodes.map(node => findCanaryPath(node)).find(Boolean);
-  // Keep this route in the shared attack choices for every scenario.
-  if (viablePath) viablePath.slice(0, -1).forEach((node, index) => {
-    const wire = currentWires.find(candidate => candidate.source.id === node.id && candidate.target.id === viablePath[index + 1].id);
-    const choices = attackChoices.get(node.id) || [];
-    if (wire && !choices.includes(wire)) attackChoices.set(node.id, [...choices, wire]);
-  });
-  const canaryPath = currentMode === 'combined' && Math.random() < 0.5 ? viablePath : null;
-  const canaryTarget = canaryPath?.[canaryPath.length - 1];
-  const canaryApproach = new Set((canaryPath || []).slice(0, -1).map(node => node.id));
   // Check every perimeter object first, then advance layer by layer. Keep
   // probes on real connections: baseline permits at most three hits per
   // layer; defended scenarios permit at most one backend data target hit.
@@ -1752,7 +1816,7 @@ function runSimulationOnCurrentInfra() {
     return (attackChoices.get(node.id) || []).some(wire => hasRouteToData(wire.target));
   }
   function priority(node) {
-    return (canaryApproach.has(node.id) || node === canaryTarget ? 2 : 0) + (hasRouteToData(node) ? 1 : 0);
+    return hasRouteToData(node) ? 1 : 0;
   }
   const orderedStarts = [...startNodes].sort((a, b) => priority(b) - priority(a));
   const visited = new Map();
@@ -1769,7 +1833,7 @@ function runSimulationOnCurrentInfra() {
       }
       let mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
       if (node === canaryTarget) {
-        mitigation = { addressed: true, badge: 'BLOCKED · CANARY TRIGGER', control: 'NIST SI-4', reason: 'The simulated attack chain reached the canary and was blocked.' };
+        mitigation = { addressed: true, badge: 'BLOCKED · CANARY TRIGGER', control: 'NIST SI-4', reason: 'Access to the decoy generated an alert; the simulated SOAR playbook contained the attacker session.' };
       }
       const hitLimit = currentMode === 'baseline' ? 3 : node.layerIdx === 3 ? 1 : Infinity;
       if (!mitigation.addressed && reached[node.layerIdx].length >= hitLimit) {
@@ -1804,6 +1868,13 @@ function runSimulationOnCurrentInfra() {
     const complete = () => { if (--remaining === 0) safeTimeout(() => playBatch(index + 1), 150); };
     batch.forEach(({ node, wire, mitigation, revisit, probeOnly }) => {
       const apply = () => {
+        if (!revisit && !probeOnly) {
+          recordSocTicket(node, mitigation, probeOnly);
+          if (node.layerIdx === 3 && !mitigation.noAssignedVulnerability && !socLooping) {
+            socLooping = true;
+            renderSocTickets();
+          }
+        }
         if (probeOnly) { complete(); return; }
         if (mitigation.addressed) {
           if (revisit && !mitigation.noAssignedVulnerability) { wire.defended = true; wire.path.classList.add('defended-wire'); }
