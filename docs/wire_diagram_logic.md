@@ -54,6 +54,38 @@ The diagram does not inventory versions or verify configuration: the table recor
 Mitigation outcomes are simplified scenario rules, not validated product efficacy. A permitted edge is an assumed attack path and does not independently prove that a CVE can be exploited across it. Manual node clicks can mark an object hit outside automatic propagation. The simulation does not model all trust, protocol, access-control, monitoring or deployment details.
 # Additional modeled products and path assumptions
 
+WAF management, identity, and detection/SOC consoles each receive a vulnerability independently
+with 25% probability when new infrastructure is generated. An unassigned
+control has no modeled exploit, so an attack stops there without a defense
+detection being counted. Assignment and paths persist with the infrastructure.
+Splunk CVE-2023-32707 is a CVE, not represented here as a verified CISA KEV;
+its scenario assumes a user with the `edit_user` capability, as described in
+[Splunk's advisory](https://advisory.splunk.com/advisories/SVD-2023-0602).
+The IDP, WAF management, and SOC connections assume management access and
+service relationships; they do not imply that monitoring traffic itself grants
+access or that exploitation automatically disables defensive controls.
+
+The product pools are F5, Fortinet, Citrix and Imperva for WAF; VMware,
+Microsoft, Red Hat and Okta for identity; and Splunk, IBM, Elastic and Wazuh
+for SOC. They are representative products, not a verified market-share ranking.
+Okta has no CVE assigned in this scenario. The other products use explicitly
+mapped CVEs; some are not known to be CISA KEVs. See the relevant NVD records:
+[FortiWeb](https://nvd.nist.gov/vuln/detail/CVE-2025-64446),
+[NetScaler](https://nvd.nist.gov/vuln/detail/CVE-2023-3519),
+[Imperva](https://nvd.nist.gov/vuln/detail/CVE-2018-5412),
+[Keycloak](https://nvd.nist.gov/vuln/detail/CVE-2021-3827),
+[AD FS](https://nvd.nist.gov/vuln/detail/CVE-2018-8340),
+[QRadar](https://nvd.nist.gov/vuln/detail/CVE-2020-4888),
+[Kibana](https://nvd.nist.gov/vuln/detail/CVE-2026-78597), and
+[Wazuh](https://nvd.nist.gov/vuln/detail/CVE-2026-25769).
+The Imperva CVE assumes local access; Keycloak and AD FS assume appropriate
+credentials; Splunk assumes `edit_user`; QRadar and Kibana assume the relevant
+authenticated privileges; Wazuh assumes a compromised cluster worker and the
+shared cluster key; and NetScaler assumes an affected Gateway or AAA
+configuration. The diagram assumes these prerequisites rather than modeling
+their acquisition. A compromised WAF is an appliance or management foothold;
+subsequent connections represent assumed access to its integrated services.
+
 The expanded catalog also includes FortiOS CVE-2018-13379, Pulse Connect Secure
 CVE-2019-11510, Apache HTTP Server CVE-2021-42013, Exchange CVE-2021-26855,
 Ivanti EPM CVE-2024-29824, Confluence CVE-2023-22515, and WebLogic

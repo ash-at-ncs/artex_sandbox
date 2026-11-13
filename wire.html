@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 <style>
   :root {
-    --bg: #000000;
+    --bg: #071426;
     --turquoise: #00f0ff;
     --turquoise-glow: rgba(0, 240, 255, 0.45);
     --green: #00ff77;
@@ -39,7 +39,7 @@
     position: relative;
     width: 100vw;
     height: 100vh;
-    background: radial-gradient(circle at 50% 50%, #03080e 0%, #000000 100%);
+    background: radial-gradient(circle at 50% 45%, #10253b 0%, #071426 75%, #050f1e 100%);
     overflow: hidden;
   }
 
@@ -64,7 +64,7 @@
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    padding: 0 150px 0 12px;
+    padding: 0 150px;
     z-index: 1000;
     pointer-events: none;
   }
@@ -143,14 +143,18 @@
   }
 
   #connector-style-btn {
+    position: absolute;
+    top: 20px;
+    left: 12px;
+    z-index: 1001;
     background: rgba(0, 30, 36, 0.85);
     border: 1px solid var(--turquoise);
     border-radius: 4px;
     color: var(--turquoise);
     cursor: pointer;
     font: inherit;
-    font-size: 10px;
-    padding: 5px 8px;
+    font-size: 9px;
+    padding: 4px 6px;
     white-space: nowrap;
   }
 
@@ -216,9 +220,9 @@
     transition: all 0.3s ease;
   }
   #run-hud.breached {
-    color: var(--red);
+    color: #ff9ba8;
     border-color: rgba(255, 34, 68, 0.4);
-    text-shadow: 0 0 8px rgba(255, 34, 68, 0.6);
+    text-shadow: 0 0 4px rgba(255, 34, 68, 0.3);
     background: rgba(26, 4, 8, 0.85);
   }
   #run-hud.contained {
@@ -379,24 +383,32 @@
     font-weight: 600;
     letter-spacing: 0.05em;
     color: #d4ffe8;
-    text-shadow: 0 0 5px rgba(212, 255, 232, 0.45);
-    white-space: nowrap;
+    text-shadow: none;
+    background: #071426;
+    border-radius: 2px;
+    padding: 1px 3px;
+    white-space: normal;
+    overflow-wrap: anywhere;
     text-align: center;
-    max-width: 130px;
+    width: max-content;
+    max-width: 150px;
     transition: color 0.4s ease, text-shadow 0.4s ease;
   }
 
   /* KEV Title underneath in RED (hidden initially, displays on hit) */
   .node-kev {
     margin-top: 3px;
-    font-size: 7.5px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9px;
     font-weight: 700;
-    color: var(--red);
-    text-shadow: 0 0 7px var(--red-glow);
-    white-space: nowrap;
+    color: #ff9ba8;
+    text-shadow: 0 0 3px rgba(255, 34, 68, 0.25);
+    white-space: normal;
+    overflow-wrap: anywhere;
     text-align: center;
-    max-width: 140px;
-    background: rgba(45, 6, 12, 0.88);
+    width: max-content;
+    max-width: 160px;
+    background: #2d060c;
     border: 1px solid rgba(255, 34, 68, 0.55);
     border-radius: 3px;
     padding: 2px 5px;
@@ -409,14 +421,14 @@
 
   .node-kev .cve {
     font-weight: 800;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.01em;
   }
 
   .node-kev .vuln-title {
     display: block;
-    font-size: 7px;
-    opacity: 0.9;
-    font-weight: 500;
+    font-size: 8px;
+    opacity: 1;
+    font-weight: 600;
   }
 
   /* HIT STATE: Lit in RED */
@@ -435,8 +447,12 @@
   }
 
   .node.hit .node-label {
-    color: #ff8899;
-    text-shadow: 0 0 8px var(--red-glow);
+    color: #ffadb8;
+    text-shadow: 0 0 4px rgba(255, 34, 68, 0.3);
+  }
+
+  .node.hit, .node.defended {
+    z-index: 10;
   }
 
   .node.hit .node-kev {
@@ -465,7 +481,7 @@
     transform: translateY(0) scale(1);
     color: #f3bd64;
     border-color: rgba(243, 189, 100, 0.6);
-    background: rgba(30, 22, 6, 0.88);
+    background: #1e1606;
     text-shadow: 0 0 8px rgba(243, 189, 100, 0.5);
     box-shadow: 0 0 10px rgba(243, 189, 100, 0.3);
   }
@@ -478,7 +494,7 @@
   }
   .node.breach-target .node-kev {
     border-color: #ff003c;
-    background: rgba(50, 0, 12, 0.95);
+    background: #32000c;
     box-shadow: 0 0 16px rgba(255, 0, 60, 0.7);
   }
 
@@ -531,13 +547,13 @@
         <span class="mode-title">02 / VIRTUAL PATCH</span>
         <span class="mode-desc">Edge WAF · 60% Perimeter Block [SI-2]</span>
       </button>
-      <button class="mode-btn" data-mode="defender" title="Behavioral ML zero-trust token containment">
-        <span class="mode-title">03 / BEHAVIORAL ML</span>
-        <span class="mode-desc">Zero-Trust ML · 70% Mesh Isolation [SI-4]</span>
+      <button class="mode-btn" data-mode="defender" title="Agentic SOAR zero-trust token containment">
+        <span class="mode-title">03 / AGENTIC SOAR</span>
+        <span class="mode-desc">Agentic response · Mesh isolation [SI-4]</span>
       </button>
       <button class="mode-btn" data-mode="combined" title="Multi-layered defense-in-depth posture">
         <span class="mode-title">04 / DEFENSE-IN-DEPTH</span>
-        <span class="mode-desc">Combined WAF + ML + Honeytoken Alarms</span>
+        <span class="mode-desc">WAF + Agentic SOC + Canary trigger</span>
       </button>
     </div>
 
@@ -546,11 +562,11 @@
         <span class="run-icon">↻</span>
         <span>NEW INFRA</span>
       </button>
-      <button id="connector-style-btn" type="button" aria-pressed="false" title="Toggle curved connectors">CONNECTORS: STRAIGHT</button>
       <div id="run-hud">READY · SELECT SCENARIO & RUN SIMULATION</div>
     </div>
   </div>
 
+  <button id="connector-style-btn" type="button" aria-pressed="false" title="Toggle curved connectors">CONNECTORS: STRAIGHT</button>
   <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.4.0</span></a>
 
   <!-- Fullscreen SVG for wires & pulses -->
@@ -591,7 +607,18 @@ const LAYER_KEVS = [
     { id: 'CVE-2022-26923', title: 'Active Directory Certifried Spoofing', tech: 'T1068' },
     { id: 'CVE-2023-29357', title: 'SharePoint OAuth Token Bypass', tech: 'T1552' },
     { id: 'CVE-2022-29464', title: 'WSO2 API Arbitrary File Upload', tech: 'T1505' },
-    { id: 'CVE-2024-29824', title: 'Ivanti EPM Core SQL Injection', tech: 'T1190' }
+    { id: 'CVE-2024-29824', title: 'Ivanti EPM Core SQL Injection', tech: 'T1190' },
+    { id: 'CVE-2023-46747', title: 'F5 BIG-IP Configuration Utility Auth Bypass', tech: 'T1190' },
+    { id: 'CVE-2022-22954', title: 'VMware Workspace ONE Access Template Injection', tech: 'T1190' },
+    { id: 'CVE-2023-32707', title: 'Splunk Enterprise Privilege Escalation', tech: 'T1068' },
+    { id: 'CVE-2025-64446', title: 'FortiWeb Management Path Traversal', tech: 'T1190' },
+    { id: 'CVE-2023-3519', title: 'NetScaler ADC Remote Code Execution', tech: 'T1190' },
+    { id: 'CVE-2018-5412', title: 'Imperva SecureSphere Local Code Execution', tech: 'T1068' },
+    { id: 'CVE-2021-3827', title: 'Keycloak MFA Bypass', tech: 'T1556' },
+    { id: 'CVE-2018-8340', title: 'AD FS MFA Bypass', tech: 'T1556' },
+    { id: 'CVE-2020-4888', title: 'IBM QRadar Deserialization', tech: 'T1059' },
+    { id: 'CVE-2026-78597', title: 'Kibana Entity Store Credential Creation', tech: 'T1098' },
+    { id: 'CVE-2026-25769', title: 'Wazuh Server Deserialization', tech: 'T1059' }
   ],
   // Layer 2: Microservices Mesh & Applications (T1059, T1210, T1505)
   [
@@ -627,7 +654,7 @@ const LAYER_KEVS = [
 
 /**
  * Domain-accurate CISA KEV mitigation capabilities
- * Maps technical exploit mechanics against WAF (SI-2/SC-7) vs Behavioral ML (SI-4/AC-3/IA-5).
+ * Maps technical exploit mechanics against WAF (SI-2/SC-7) vs Agentic SOC Mitigation (SI-4/AC-3/IA-5).
  */
 const KEV_MITIGATION_RULES = {
   // Layer 0 - Perimeter & Cloud Ingress
@@ -667,11 +694,11 @@ const KEV_MITIGATION_RULES = {
   // Layer 1 - Gateways & Auth
   'CVE-2023-22515': {
     waf: { mitigates: false, reason: 'Legitimate HTTP requests to /setup endpoints pass perimeter WAF inspection' },
-    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML flags setup wizard execution on established production instance' }
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Agentic SOC Mitigation flags setup wizard execution on established production instance' }
   },
   'CVE-2024-27198': {
     waf: { mitigates: false, reason: 'OAuth/Auth endpoint traversal passes standard perimeter HTTP parsers' },
-    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Behavioral ML isolates service on forged administrative token minting' }
+    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Agentic SOC Mitigation isolates service on forged administrative token minting' }
   },
   'CVE-2023-38035': {
     waf: { mitigates: true, control: 'NIST SC-7', reason: 'Edge WAF blocks unauthenticated HTTP requests to MICS port 8443 interface' },
@@ -683,33 +710,33 @@ const KEV_MITIGATION_RULES = {
   },
   'CVE-2024-1709': {
     waf: { mitigates: false, reason: 'Setup wizard URI /SetupWizard.aspx is considered valid application traffic by WAF' },
-    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML blocks unauthorized admin account creation out-of-band' }
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Agentic SOC Mitigation blocks unauthorized admin account creation out-of-band' }
   },
   'CVE-2021-26855': {
     waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF virtual patch filters X-AnonResource-Backend SSRF header' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects internal SSRF lateral probe to backend Exchange RPC' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects internal SSRF lateral probe to backend Exchange RPC' }
   },
   'CVE-2022-26923': {
     waf: { mitigates: false, reason: 'Active Directory certificate enrollment traffic is outside HTTP WAF scope' },
-    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Behavioral ML detects anomalous dNSHostName attribute modification on computer account' }
+    ml:  { mitigates: true, control: 'NIST IA-5 / AC-3', reason: 'Agentic SOC Mitigation detects anomalous dNSHostName attribute modification on computer account' }
   },
   'CVE-2023-29357': {
     waf: { mitigates: false, reason: 'Forged JWT signing alg=none tokens pass initial TLS termination proxies' },
-    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML isolates spoofed farm administrator claims without valid IdP signature' }
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Agentic SOC Mitigation isolates spoofed farm administrator claims without valid IdP signature' }
   },
 
   // Layer 2 - Services Mesh & Applications
   'CVE-2021-44228': {
     waf: { mitigates: false, reason: 'Nested/obfuscated JNDI ${jndi:ldap://...} strings bypass edge WAF pattern matching' },
-    ml:  { mitigates: true, control: 'NIST SI-4 / SC-7', reason: 'Behavioral ML terminates unexpected outbound LDAP/RMI egress from worker node' }
+    ml:  { mitigates: true, control: 'NIST SI-4 / SC-7', reason: 'Agentic SOC Mitigation terminates unexpected outbound LDAP/RMI egress from worker node' }
   },
   'CVE-2023-22527': {
     waf: { mitigates: false, reason: 'OGNL template injection resides inside legitimate JSON/POST application payload' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects anomalous subprocess spawning /bin/sh from java.exe' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects anomalous subprocess spawning /bin/sh from java.exe' }
   },
   'CVE-2022-22965': {
     waf: { mitigates: false, reason: 'Spring parameter binding injection evades standard perimeter URL signatures' },
-    ml:  { mitigates: true, control: 'NIST SI-4 / SI-3', reason: 'Behavioral ML halts unexpected file write to Tomcat webapps/ROOT/shell.jsp' }
+    ml:  { mitigates: true, control: 'NIST SI-4 / SI-3', reason: 'Agentic SOC Mitigation halts unexpected file write to Tomcat webapps/ROOT/shell.jsp' }
   },
   'CVE-2022-29464': {
     waf: { mitigates: false, reason: 'Multipart file upload endpoint accepts standard HTTP multipart requests' },
@@ -717,19 +744,19 @@ const KEV_MITIGATION_RULES = {
   },
   'CVE-2023-2868': {
     waf: { mitigates: false, reason: 'Perimeter WAF does not inspect deep internal tar archive attachments' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects anomalous reverse shell connection to foreign IP' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects anomalous reverse shell connection to foreign IP' }
   },
   'CVE-2022-30190': {
     waf: { mitigates: false, reason: 'MSDT URI handler protocol payload passes perimeter proxies as normal doc link' },
-    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML terminates rogue sdiagnhost.exe process execution' }
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Agentic SOC Mitigation terminates rogue sdiagnhost.exe process execution' }
   },
   'CVE-2023-46604': {
     waf: { mitigates: false, reason: 'OpenWire TCP 61616 protocol traffic bypasses perimeter HTTP WAF' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML terminates anomalous Java ClassPathXmlApplicationContext load' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation terminates anomalous Java ClassPathXmlApplicationContext load' }
   },
   'CVE-2022-46169': {
     waf: { mitigates: false, reason: 'Forwarded-For header spoofing bypasses remote agent authentication' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML flags shell command injection in poller.php execution' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation flags shell command injection in poller.php execution' }
   },
   'CVE-2023-42793': {
     waf: { mitigates: false, reason: 'The internal TeamCity management service is outside the perimeter WAF.' },
@@ -739,51 +766,51 @@ const KEV_MITIGATION_RULES = {
   // Layer 3 - Clustered Backend Databases, Vaults & Repositories
   'CVE-2023-34362': {
     waf: { mitigates: true, control: 'NIST SI-2', reason: 'WAF SQLi virtual patch inspects & blocks malformed X-MOVEit headers' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects abnormal mass query exfiltration on core SQL tables' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects abnormal mass query exfiltration on core SQL tables' }
   },
   'CVE-2023-27350': {
     waf: { mitigates: false, reason: 'Setup wizard bypass occurs over legitimate administrative web interface' },
-    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Behavioral ML blocks unauthenticated database dump and lateral admin spawn' }
+    ml:  { mitigates: true, control: 'NIST SI-4 / AC-3', reason: 'Agentic SOC Mitigation blocks unauthenticated database dump and lateral admin spawn' }
   },
   'CVE-2020-1472': {
     waf: { mitigates: false, reason: 'Zerologon exploits Netlogon RPC (TCP 135/445), not covered by HTTP/WAF' },
-    ml:  { mitigates: true, control: 'NIST AC-3 / IA-5', reason: 'Behavioral ML flags anomalous NetrServerAuthenticate with 16 zero-bytes' }
+    ml:  { mitigates: true, control: 'NIST AC-3 / IA-5', reason: 'Agentic SOC Mitigation flags anomalous NetrServerAuthenticate with 16 zero-bytes' }
   },
   'CVE-2023-36884': {
     waf: { mitigates: false, reason: 'Office document protocol payload bypasses perimeter application firewalls' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML halts SearchFilterHost.exe memory injection and credential dump' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation halts SearchFilterHost.exe memory injection and credential dump' }
   },
   'CVE-2023-0669': {
     waf: { mitigates: false, reason: 'Encrypted deserialization payload in GoAnywhere passes perimeter proxies' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects abnormal customer storage zone file exfiltration' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects abnormal customer storage zone file exfiltration' }
   },
   'CVE-2023-48788': {
     waf: { mitigates: false, reason: 'FortiClient EMS SQL injection occurs inside internal enterprise client RPC' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects xp_cmdshell execution and mass DB schema dumping' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects xp_cmdshell execution and mass DB schema dumping' }
   },
   'CVE-2022-47966': {
     waf: { mitigates: false, reason: 'SAML XML body injection evades edge pattern matchers without deep cert validation' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML blocks anomalous PostgreSQL data export and child process execution' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation blocks anomalous PostgreSQL data export and child process execution' }
   },
   'CVE-2024-37085': {
     waf: { mitigates: false, reason: 'ESXi hypervisor management protocol operates outside perimeter WAF boundaries' },
-    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML alerts on rogue ESX Admins group creation attempting VMFS storage exfil' }
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Agentic SOC Mitigation alerts on rogue ESX Admins group creation attempting VMFS storage exfil' }
   },
   'CVE-2023-24489': {
     waf: { mitigates: false, reason: 'Unauthenticated file upload to Storage Zone Controller bypasses perimeter checks' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML halts unexpected high-volume S3 customer lake exfiltration' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation halts unexpected high-volume S3 customer lake exfiltration' }
   },
   'CVE-2022-26134': {
     waf: { mitigates: false, reason: 'OGNL payload executed against internal application server pool' },
-    ml:  { mitigates: true, control: 'NIST IA-5', reason: 'Behavioral ML detects memory dumping of database connection credentials' }
+    ml:  { mitigates: true, control: 'NIST IA-5', reason: 'Agentic SOC Mitigation detects memory dumping of database connection credentials' }
   },
   'CVE-2024-1086': {
     waf: { mitigates: false, reason: 'Local Linux kernel netfilter double-free exploit is internal to host OS' },
-    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Behavioral ML terminates unauthorized privilege escalation targeting root vault databases' }
+    ml:  { mitigates: true, control: 'NIST AC-3', reason: 'Agentic SOC Mitigation terminates unauthorized privilege escalation targeting root vault databases' }
   },
   'CVE-2022-22954': {
     waf: { mitigates: false, reason: 'SSTI expression inside OAuth client parameters bypasses standard URI filters' },
-    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Behavioral ML detects lateral dump of embedded identity database secrets' }
+    ml:  { mitigates: true, control: 'NIST SI-4', reason: 'Agentic SOC Mitigation detects lateral dump of embedded identity database secrets' }
   }
 };
 
@@ -797,15 +824,27 @@ Object.assign(KEV_MITIGATION_RULES, {
   'CVE-2022-0543': { waf: { mitigates: false, reason: 'Redis protocol traffic is outside the HTTP WAF.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring flags unexpected Redis child processes.' } },
   'CVE-2020-0618': { waf: { mitigates: false, reason: 'The internal reporting service is outside the perimeter WAF.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring flags unexpected reporting-service execution.' } }
 });
+Object.assign(KEV_MITIGATION_RULES, {
+  'CVE-2023-46747': { waf: { mitigates: false, reason: 'The BIG-IP management interface is assumed reachable outside the protected application path.' }, ml: { mitigates: false, reason: 'The appliance management plane is outside internal host monitoring.' } },
+  'CVE-2022-22954': { waf: { mitigates: false, reason: 'The identity service is assumed reachable on an internal management path.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring detects unexpected identity-service execution.' } },
+  'CVE-2023-32707': { waf: { mitigates: false, reason: 'The Splunk management service is internal.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring flags anomalous administrative role changes.' } }
+});
+// These model assumptions do not imply that a particular security product detects the CVE.
+['CVE-2025-64446', 'CVE-2018-5412', 'CVE-2021-3827', 'CVE-2018-8340', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'].forEach(id => {
+  KEV_MITIGATION_RULES[id] = {
+    waf: { mitigates: false, reason: 'The simulated management or service path is outside the perimeter WAF.' },
+    ml: { mitigates: true, control: 'NIST SI-4', reason: 'The scenario assumes independent monitoring detects the anomalous activity.' }
+  };
+});
 
 /**
  * Checks whether a given vulnerability can be addressed by the active mitigation scenario.
  */
 function checkVulnMitigation(vulnId, mode, node) {
+  if (node.targetDef?.vulnerabilityChance != null && !vulnId) {
+    return { addressed: true, noAssignedVulnerability: true, badge: 'NO ASSIGNED CVE', reason: 'This control has no modeled vulnerability in this infrastructure; the attack cannot exploit it.' };
+  }
   if (!vulnId) {
-    if (mode === 'combined' && (node.isLake || node.isDb || node.layerIdx === 3)) {
-      return { addressed: true, badge: 'TRAPPED · HONEYTOKEN TRIPWIRE', control: 'NIST SI-4', reason: 'Simulated honeytoken tripwire stopped access to the data target.' };
-    }
     return { addressed: false, badge: 'T1078 · VALID ACCOUNTS', reason: 'Simulated technique: the attacker uses assumed compromised account credentials to access this asset. No CVE is mapped.' };
   }
   if (mode === 'baseline') {
@@ -851,7 +890,7 @@ function checkVulnMitigation(vulnId, mode, node) {
     if (rule.ml && rule.ml.mitigates) {
       return {
         addressed: true,
-        badge: 'CONTAINED · BEHAVIORAL ML',
+        badge: 'CONTAINED · AGENTIC SOC MITIGATION',
         control: rule.ml.control,
         reason: rule.ml.reason
       };
@@ -876,18 +915,9 @@ function checkVulnMitigation(vulnId, mode, node) {
     if (rule.ml && rule.ml.mitigates) {
       return {
         addressed: true,
-        badge: 'CONTAINED · ZERO-TRUST ML',
+        badge: 'CONTAINED · AGENTIC SOC MITIGATION',
         control: rule.ml.control,
         reason: rule.ml.reason
-      };
-    }
-    // Database honeypot alarm protection
-    if (node.isLake || node.isDb || node.layerIdx === 3) {
-      return {
-        addressed: true,
-        badge: 'TRAPPED · HONEYTOKEN TRIPWIRE',
-        control: 'NIST SC-7 / SI-4',
-        reason: 'Honeytoken canary tripwire halted database lateral dump'
       };
     }
     return {
@@ -948,7 +978,7 @@ const LAYER_CONFIG = [
         targets: [
           { id: 'cust-api', icon: 'api.png', kevByVariant: ['CVE-2022-29464', 'CVE-2022-29464', 'CVE-2022-29464'], variants: ['WSO2 Customer API GW #01', 'WSO2 Customer API GW #02', 'WSO2 Customer API GW #03'] },
           { id: 'partner-api', icon: 'api.png', kevByVariant: ['CVE-2022-29464', 'CVE-2022-29464', 'CVE-2022-29464'], variants: ['WSO2 Partner API Gateway', 'WSO2 B2B Webhook Gateway', 'WSO2 Partner Sync Gateway'] },
-          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, variants: ['Edge WAF Reverse Proxy', 'Edge Ingress Envoy'] },
+          { id: 'waf-proxy', icon: 'server-infrastructure.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-46747', 'CVE-2025-64446', 'CVE-2023-3519', 'CVE-2018-5412'], variants: ['F5 BIG-IP Advanced WAF', 'Fortinet FortiWeb WAF', 'Citrix NetScaler WAF + Gateway', 'Imperva SecureSphere WAF'] },
           { id: 'wso2-api', icon: 'api.png', kevByVariant: ['CVE-2022-29464'], variants: ['WSO2 API Manager'] },
           { id: 'exchange', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2021-26855'], variants: ['Microsoft Exchange Server'] }
         ]
@@ -956,7 +986,7 @@ const LAYER_CONFIG = [
       {
         name: 'Identity & Access',
         targets: [
-          { id: 'iam-idp', icon: 'identity.png', variants: ['OAuth2 / Okta IdP (Primary)', 'SAML IdP (Internal)'] },
+          { id: 'iam-idp', icon: 'identity.png', productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2022-22954', 'CVE-2018-8340', 'CVE-2021-3827', null], variants: ['VMware Workspace ONE Access IdP', 'Microsoft AD FS IdP', 'Red Hat Keycloak IdP', 'Okta Identity Cloud'] },
           { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['Vault Secrets Store'] },
           { id: 'sentry-auth', icon: 'endpoint.png', kevByVariant: ['CVE-2023-38035', 'CVE-2023-38035'], variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] },
           { id: 'ad-identity', icon: 'identity.png', kevByVariant: ['CVE-2022-26923'], variants: ['Active Directory Domain Controller'] },
@@ -966,8 +996,8 @@ const LAYER_CONFIG = [
       {
         name: 'Boundary Controls',
         targets: [
-          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, variants: ['WAF Threat Detection'] },
-          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, variants: ['Perimeter SOC Telemetry'] }
+          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-32707', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'], variants: ['Splunk Enterprise Detection', 'IBM QRadar SIEM Detection', 'Elastic Security / Kibana', 'Wazuh Server Detection'] },
+          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-32707', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'], variants: ['Splunk Enterprise SOC', 'IBM QRadar SIEM SOC', 'Elastic Security SOC', 'Wazuh Server SOC'] }
         ]
       }
     ]
@@ -1062,14 +1092,14 @@ const LAYER_CONFIG = [
 const ALLOWED_CONNECTIONS = {
   'aws-infra': ['cust-api', 'waf-proxy'],
   'aws-vpn': ['sentry-auth'],
-  'ivanti-connect': ['cust-api'],
+  'ivanti-connect': ['cust-api', 'iam-idp', 'soc-sensor'],
   'f5-gateway': ['cust-api', 'wso2-api'],
-  'forti-vpn': ['sentry-auth', 'ivanti-epm'],
-  'pulse-vpn': ['sentry-auth', 'ivanti-epm'],
-  'apache-edge': ['cust-api', 'exchange'],
+  'forti-vpn': ['sentry-auth', 'ivanti-epm', 'iam-idp'],
+  'pulse-vpn': ['sentry-auth', 'ivanti-epm', 'soc-sensor'],
+  'apache-edge': ['cust-api', 'exchange', 'threat-det'],
   'az-net': ['cust-api', 'waf-proxy'],
   'az-branch': ['sentry-auth'],
-  'pan-globalprotect': ['cust-api'],
+  'pan-globalprotect': ['cust-api', 'iam-idp', 'threat-det'],
   'gcp-infra': ['cust-api', 'partner-api'],
   'partner-gw': ['partner-api'],
   'ext-surface': ['waf-proxy'],
@@ -1077,6 +1107,9 @@ const ALLOWED_CONNECTIONS = {
   'cust-api': ['app-engine', 'spring-svc', 'iot-hub', 'activemq'],
   'partner-api': ['app-engine', 'iot-hub', 'moveit-sftp'],
   'waf-proxy': ['app-engine', 'spring-svc', 'confluence-node'],
+  'iam-idp': ['app-engine', 'spring-svc', 'cicd-runner'],
+  'soc-sensor': ['vuln-scan', 'cicd-runner'],
+  'threat-det': ['vuln-scan', 'cicd-runner'],
   'wso2-api': ['app-engine', 'spring-svc', 'moveit-sftp', 'activemq'],
   'sentry-auth': ['app-engine', 'spring-svc', 'cicd-runner', 'vuln-scan'],
   'exchange': ['confluence-admin'],
@@ -1134,8 +1167,8 @@ const DEFENSE_SCENARIOS = {
     p2: 0.0
   },
   defender: {
-    tag: '03 / BEHAVIORAL ML',
-    name: 'Behavioral ML Defense',
+    tag: '03 / AGENTIC SOAR',
+    name: 'Agentic SOAR',
     p0: 0.0,
     p1: 0.45,
     p2: 0.70
@@ -1220,13 +1253,17 @@ function layoutGraph(snapshot = null) {
         const maxVariants = targetDef.variants.length;
         const instanceCount = maxVariants > 1 ? randInt(1, Math.min(3, maxVariants)) : 1;
 
-        for (let vIdx = 0; vIdx < instanceCount; vIdx++) {
+        const variants = targetDef.productPool
+          ? shuffle(Array.from({ length: maxVariants }, (_, index) => index)).slice(0, instanceCount)
+          : Array.from({ length: instanceCount }, (_, index) => index);
+        for (let slot = 0; slot < instanceCount; slot++) {
+          const vIdx = variants[slot];
           let ox = 0, oy = 0;
           if (instanceCount === 2) {
-            ox = (vIdx === 0 ? -22 : 22) + rand(-3, 3);
-            oy = (vIdx === 0 ? -16 : 16) + rand(-3, 3);
+            ox = (slot === 0 ? -22 : 22) + rand(-3, 3);
+            oy = (slot === 0 ? -16 : 16) + rand(-3, 3);
           } else if (instanceCount === 3) {
-            const iAngle = (vIdx / 3) * Math.PI * 2 - Math.PI / 2;
+            const iAngle = (slot / 3) * Math.PI * 2 - Math.PI / 2;
             ox = Math.cos(iAngle) * 24 + rand(-3, 3);
             oy = Math.sin(iAngle) * 20 + rand(-3, 3);
           }
@@ -1236,7 +1273,8 @@ function layoutGraph(snapshot = null) {
 
           // Only explicit per-variant product mappings are eligible. Versions and
           // vulnerable configurations are assumed for this synthetic scenario.
-          const kevId = (targetDef.kevByVariant || [])[vIdx];
+          const vulnerabilityAssigned = targetDef.vulnerabilityChance == null || Math.random() < targetDef.vulnerabilityChance;
+          const kevId = vulnerabilityAssigned ? (targetDef.kevByVariant || [])[vIdx] : null;
           const kev = kevId ? LAYER_KEVS[layerIdx].find(k => k.id === kevId) : null;
           if (kevId && !kev) throw new Error(`Unknown CVE ${kevId} for ${targetDef.id}`);
 
@@ -1244,6 +1282,7 @@ function layoutGraph(snapshot = null) {
             id: `${targetDef.id}-${vIdx + 1}`,
             groupId: targetDef.id,
             targetDef: targetDef,
+            vulnerabilityAssigned,
             label: targetDef.variants[vIdx],
             icon: targetDef.icon,
             isSecurity: !!targetDef.isSecurity,
@@ -1296,7 +1335,9 @@ function layoutGraph(snapshot = null) {
     el.id = 'node-' + node.id;
     el.title = node.kev
       ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
-      : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
+      : node.targetDef.vulnerabilityChance != null
+        ? 'No vulnerability assigned to this control in this infrastructure.'
+        : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
     el.style.left = `${node.x}px`;
     el.style.top = `${node.y}px`;
 
@@ -1394,7 +1435,9 @@ function resetInfraVisuals() {
       node.el.className = 'node';
       node.el.title = node.kev
         ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
-        : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
+        : node.targetDef.vulnerabilityChance != null
+          ? 'No vulnerability assigned to this control in this infrastructure.'
+          : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
       const kevEl = node.el.querySelector('.node-kev');
       if (kevEl) {
         kevEl.innerHTML = `
@@ -1452,12 +1495,13 @@ function triggerNodeHit(node, isExfil = false) {
 function triggerNodeDefense(node, wire, mitigation) {
   if (node.hit || node.defended) return;
   node.defended = true;
+  if (mitigation.noAssignedVulnerability) return;
   runStats.blocks++;
 
   if (node.el) {
     node.el.classList.add('defended');
     const badgeText = mitigation.badge || 'CONTAINED';
-    const targetText = node.kev ? node.kev.id : 'T1078 · VALID ACCOUNTS';
+    const targetText = node.kev ? node.kev.id : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
     const subText = mitigation.control ? `${targetText} · [${mitigation.control}]` : `Mitigated ${targetText}`;
     node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
@@ -1543,10 +1587,13 @@ function restoreInfra(snapshot) {
     const definition = LAYER_CONFIG[node.layerIdx]?.clusters.flatMap(cluster => cluster.targets).find(target => target.id === node.groupId);
     const variant = Number(node.id.slice(node.id.lastIndexOf('-') + 1)) - 1;
     if (!definition || !definition.variants[variant]) return;
+    // Older saved controls retain their original products until New Infra.
+    if (definition.productPool && !node.targetDef?.productPool) return;
     node.label = definition.variants[variant];
     node.targetDef = definition;
     const kevId = definition.kevByVariant?.[variant];
-    node.kev = kevId ? LAYER_KEVS[node.layerIdx].find(kev => kev.id === kevId) || null : null;
+    if (definition.vulnerabilityChance != null && node.vulnerabilityAssigned == null) node.vulnerabilityAssigned = false;
+    node.kev = kevId && (definition.vulnerabilityChance == null || node.vulnerabilityAssigned) ? LAYER_KEVS[node.layerIdx].find(kev => kev.id === kevId) || null : null;
   });
   clearAllActiveTimeouts();
   layoutGraph(snapshot);
@@ -1579,31 +1626,91 @@ function runSimulationOnCurrentInfra() {
 
   // Build the complete result synchronously in a stable order. Animation cannot
   // affect the outcome, and all scenarios use the same chosen attack paths.
-  const queue = startNodes.map(node => ({ node, wire: null }));
-  const visited = new Set();
+  // Model one canary on a reachable layer 3 or 4 target. Half of combined
+  // runs send one existing attack chain past earlier controls to that canary.
+  // Other chains continue to use the normal mitigation rules.
+  function findCanaryPath(node, path = []) {
+    if (node.targetDef?.vulnerabilityChance != null && !node.kev) return null;
+    const nextPath = [...path, node];
+    if (node.layerIdx === 3) return nextPath;
+    const preferred = attackChoices.get(node.id) || [];
+    const candidates = [...preferred, ...currentWires.filter(wire => wire.source.id === node.id && !preferred.includes(wire))];
+    for (const wire of candidates) {
+      const found = findCanaryPath(wire.target, nextPath);
+      if (found) return found;
+    }
+    return node.layerIdx === 2 ? nextPath : null;
+  }
+  const viablePath = startNodes.map(node => findCanaryPath(node)).find(Boolean);
+  // Keep this route in the shared attack choices for every scenario.
+  if (viablePath) viablePath.slice(0, -1).forEach((node, index) => {
+    const wire = currentWires.find(candidate => candidate.source.id === node.id && candidate.target.id === viablePath[index + 1].id);
+    const choices = attackChoices.get(node.id) || [];
+    if (wire && !choices.includes(wire)) attackChoices.set(node.id, [...choices, wire]);
+  });
+  const canaryPath = currentMode === 'combined' && Math.random() < 0.5 ? viablePath : null;
+  const canaryTarget = canaryPath?.[canaryPath.length - 1];
+  const canaryApproach = new Set((canaryPath || []).slice(0, -1).map(node => node.id));
+  const queue = [...startNodes].sort((a, b) => Number(canaryApproach.has(b.id)) - Number(canaryApproach.has(a.id))).map(node => ({ node, wire: null }));
+  const visited = new Map();
   const hitsByLayer = [0, 0, 0, 0];
+  const drawnWires = new Set();
   const events = [];
   while (queue.length) {
     const { node, wire } = queue.shift();
-    if (visited.has(node.id)) continue;
-    const mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
-    if (!mitigation.addressed && hitsByLayer[node.layerIdx] >= 3) continue;
-    visited.add(node.id);
+    if (wire && drawnWires.has(wire)) continue;
+    if (visited.has(node.id)) {
+      // Show paths that converge on a target already reached or blocked.
+      if (wire) {
+        drawnWires.add(wire);
+        events.push({ node, wire, mitigation: visited.get(node.id), revisit: true });
+      }
+      continue;
+    }
+    let mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
+    if (node === canaryTarget) {
+      mitigation = { addressed: true, badge: 'BLOCKED · CANARY TRIGGER', control: 'NIST SI-4', reason: 'The simulated attack chain reached the canary and was blocked.' };
+    } else if (canaryApproach.has(node.id)) {
+      mitigation = { addressed: false, badge: 'DEFENSE BYPASSED', reason: 'This simulated attack chain bypassed earlier defenses before reaching the canary.' };
+    }
+    if (!mitigation.addressed && !canaryApproach.has(node.id) && hitsByLayer[node.layerIdx] >= 3) {
+      // Rejoin a compromised target only through an existing connection from
+      // this source. Never invent a link just to satisfy the display cap.
+      const rejoin = wire && currentWires.find(candidate =>
+        candidate.source.id === wire.source.id && !drawnWires.has(candidate) &&
+        visited.has(candidate.target.id) && !visited.get(candidate.target.id).addressed
+      );
+      if (rejoin) queue.push({ node: rejoin.target, wire: rejoin });
+      continue;
+    }
+    visited.set(node.id, mitigation);
+    if (wire) drawnWires.add(wire);
     events.push({ node, wire, mitigation });
     if (!mitigation.addressed) {
       hitsByLayer[node.layerIdx]++;
-      (attackChoices.get(node.id) || []).forEach(next => queue.push({ node: next.target, wire: next }));
+      [...(attackChoices.get(node.id) || [])].sort((a, b) => Number(canaryApproach.has(b.target.id) || b.target === canaryTarget) - Number(canaryApproach.has(a.target.id) || a.target === canaryTarget)).forEach(next => queue.push({ node: next.target, wire: next }));
     }
   }
 
   function playEvent(index) {
     if (index >= events.length) { finalizeSimulation(); return; }
-    const { node, wire, mitigation } = events[index];
+    const { node, wire, mitigation, revisit } = events[index];
     const apply = () => {
-      if (mitigation.addressed) triggerNodeDefense(node, wire, mitigation);
+      if (mitigation.addressed) {
+        if (revisit && !mitigation.noAssignedVulnerability) { wire.defended = true; wire.path.classList.add('defended-wire'); }
+        else triggerNodeDefense(node, wire, mitigation);
+      }
       else {
         if (wire) { wire.hit = true; wire.path.classList.add('hit-wire'); }
-        triggerNodeHit(node, node.layerIdx === 3);
+        if (!revisit) {
+          triggerNodeHit(node, node.layerIdx === 3);
+          if (!node.kev && wire && node.el) {
+            const explanation = `Assumed credential reuse from ${wire.source.label} to ${node.label} (MITRE ATT&CK T1078). The simulation does not model how the credentials were obtained or created.`;
+            node.el.title = explanation;
+            const detail = node.el.querySelector('.node-kev .vuln-title');
+            if (detail) detail.textContent = `Assumed credentials from ${wire.source.label}`;
+          }
+        }
       }
       safeTimeout(() => playEvent(index + 1), 120);
     };
@@ -1640,10 +1747,14 @@ function finalizeSimulation() {
 
 // Bind 4 mode scenario buttons: tests the SAME infrastructure with SAME vulns
 const connectorStyleBtn = document.getElementById('connector-style-btn');
-connectorStyleBtn.addEventListener('click', () => {
-  curvedConnectors = !curvedConnectors;
+function updateConnectorButton() {
   connectorStyleBtn.setAttribute('aria-pressed', String(curvedConnectors));
   connectorStyleBtn.textContent = `CONNECTORS: ${curvedConnectors ? 'CURVED' : 'STRAIGHT'}`;
+}
+connectorStyleBtn.addEventListener('click', () => {
+  curvedConnectors = !curvedConnectors;
+  updateConnectorButton();
+  try { localStorage.setItem('artex-wire-connectors', curvedConnectors ? 'curved' : 'straight'); } catch (error) { console.warn('Unable to save connector style', error); }
   currentWires.forEach(updateWirePath);
 });
 
@@ -1668,6 +1779,8 @@ window.addEventListener('resize', () => {
 
 window.addEventListener('load', () => {
   try {
+    curvedConnectors = localStorage.getItem('artex-wire-connectors') === 'curved';
+    updateConnectorButton();
     const mode = localStorage.getItem('artex-wire-mode');
     if (mode && DEFENSE_SCENARIOS[mode]) {
       currentMode = mode;
