@@ -248,8 +248,11 @@
     stroke: var(--green-wire);
     stroke-width: 1.25;
     stroke-linecap: round;
-    transition: stroke 0.4s ease, stroke-width 0.3s ease, filter 0.3s ease, stroke-opacity 0.4s ease;
+    opacity: 0;
+    transition: opacity 0.8s ease, stroke 0.4s ease, stroke-width 0.3s ease, filter 0.3s ease, stroke-opacity 0.4s ease;
   }
+
+  .wire.revealed, .wire.active-wire, .wire.hit-wire, .wire.defended-wire { opacity: 1; }
 
   .attack-entry {
     fill: none;
@@ -645,6 +648,69 @@ function recordSocTicket(node, mitigation, probeOnly = false) {
     socTickets.set(`${node.id}-soar-response`, { title: 'SOAR containment', severity: 'HIGH', detail: `Playbook contained session at ${node.label}` });
   }
   renderSocTickets();
+}
+
+// Concise attack descriptions based on the linked vulnerability records.
+const CVE_ATTACK_DESCRIPTIONS = {
+  "CVE-2018-13379": "FortiOS SSL VPN path traversal can expose system files, including session information.",
+  "CVE-2018-5412": "Imperva SecureSphere local code execution vulnerability.",
+  "CVE-2018-8340": "AD FS authentication bypass can allow an attacker to bypass multi-factor authentication.",
+  "CVE-2019-11510": "Pulse Connect Secure path traversal lets an unauthenticated attacker read server files.",
+  "CVE-2020-0618": "SQL Server Reporting Services deserialization can lead to remote code execution.",
+  "CVE-2020-1472": "Zerologon abuses Netlogon authentication to gain domain controller privileges.",
+  "CVE-2020-14882": "WebLogic console access controls can be bypassed, allowing remote compromise.",
+  "CVE-2020-4888": "IBM QRadar deserialization of crafted Java objects can execute commands.",
+  "CVE-2021-26855": "ProxyLogon uses server-side request forgery to send requests through Exchange.",
+  "CVE-2021-35225": "A SolarWinds NPM flaw can disclose information to a user with limited access.",
+  "CVE-2021-3827": "A Keycloak flaw can allow authentication protections to be bypassed.",
+  "CVE-2021-42013": "Apache path traversal can expose files and, in some configurations, execute commands.",
+  "CVE-2021-44228": "Log4Shell: attacker-controlled log content can trigger a malicious JNDI lookup and remote code execution.",
+  "CVE-2022-0543": "A Debian Redis Lua sandbox escape can allow a client to execute system commands.",
+  "CVE-2022-1388": "F5 BIG-IP iControl REST authentication bypass can allow remote command execution.",
+  "CVE-2022-22954": "VMware Workspace ONE template injection can allow remote code execution.",
+  "CVE-2022-22965": "Spring4Shell abuses data binding in affected deployments to execute code.",
+  "CVE-2022-26134": "Confluence OGNL injection can allow an unauthenticated attacker to execute code.",
+  "CVE-2022-26923": "Certifried abuses Active Directory certificate enrollment to impersonate a computer account.",
+  "CVE-2022-29464": "A WSO2 file-upload flaw can let an attacker upload files and execute code.",
+  "CVE-2022-29712": "Command injection through LibreNMS service configuration parameters.",
+  "CVE-2022-30190": "Follina uses a crafted document to invoke MSDT and execute code.",
+  "CVE-2022-42475": "A FortiOS SSL VPN heap overflow can allow unauthenticated remote code execution.",
+  "CVE-2022-46169": "Cacti command injection can allow unauthenticated code execution when a vulnerable polling configuration is present.",
+  "CVE-2022-47966": "ManageEngine SAML processing can allow remote code execution through a vulnerable XML library.",
+  "CVE-2023-0669": "GoAnywhere MFT deserialization can allow unauthenticated remote code execution.",
+  "CVE-2023-20198": "Cisco IOS XE web UI access controls can be bypassed to create a privileged account.",
+  "CVE-2023-22515": "Confluence broken access control can let an attacker create an administrator account.",
+  "CVE-2023-22527": "Confluence template injection can allow unauthenticated remote code execution.",
+  "CVE-2023-24489": "A ShareFile storage zones controller flaw can allow unauthenticated remote compromise.",
+  "CVE-2023-27350": "PaperCut authentication bypass can allow code execution with SYSTEM privileges.",
+  "CVE-2023-2868": "Barracuda Email Security Gateway command injection can enable remote code execution.",
+  "CVE-2023-29357": "SharePoint authentication bypass can let an attacker gain administrator privileges using forged tokens.",
+  "CVE-2023-32707": "A Splunk Enterprise vulnerability can allow privilege escalation.",
+  "CVE-2023-34362": "MOVEit Transfer SQL injection can give an unauthenticated attacker access to its database.",
+  "CVE-2023-3519": "NetScaler ADC and Gateway code injection can allow unauthenticated remote code execution.",
+  "CVE-2023-36884": "A crafted Office document can exploit a Windows and Office remote code execution vulnerability.",
+  "CVE-2023-38035": "Ivanti Sentry authentication bypass can expose restricted administrative functionality.",
+  "CVE-2023-42793": "TeamCity authentication bypass can allow access to administrative functions.",
+  "CVE-2023-46604": "ActiveMQ OpenWire deserialization can allow remote shell command execution.",
+  "CVE-2023-46747": "F5 BIG-IP configuration utility authentication bypass can allow remote system commands.",
+  "CVE-2023-46805": "Ivanti Connect Secure authentication bypass can expose restricted resources.",
+  "CVE-2023-48788": "FortiClient EMS SQL injection can allow unauthorized code or command execution.",
+  "CVE-2023-4966": "Citrix Bleed can leak NetScaler session tokens from appliance memory.",
+  "CVE-2024-1086": "A Linux netfilter use-after-free can allow a local attacker to escalate privileges.",
+  "CVE-2024-1709": "ScreenConnect authentication bypass can allow unauthorized administrative access.",
+  "CVE-2024-21887": "Ivanti Connect Secure command injection can allow an attacker with administrative access to execute commands.",
+  "CVE-2024-27198": "TeamCity authentication bypass can allow an unauthenticated attacker to gain administrative access.",
+  "CVE-2024-29824": "Ivanti EPM SQL injection can let an unauthenticated attacker on the same network execute code.",
+  "CVE-2024-3400": "PAN-OS GlobalProtect command injection can allow unauthenticated code execution as root.",
+  "CVE-2024-37085": "ESXi authentication bypass can grant elevated access through a specially named Active Directory group.",
+  "CVE-2024-4577": "PHP CGI argument injection can allow remote code execution in affected Windows configurations.",
+  "CVE-2025-64446": "FortiWeb path traversal can let a remote attacker reach restricted management functionality.",
+  "CVE-2026-25769": "A compromised Wazuh worker can exploit deserialization to execute code on the cluster master.",
+  "CVE-2026-42271": "LiteLLM MCP test endpoint command injection can allow a user with a valid API key to execute commands.",
+  "CVE-2026-78597": "A low-privileged Kibana user can invoke an Entity Store operation to create unauthorized API credentials."
+};
+function cveTooltip(kev) {
+  return `${kev.id} · ${CVE_ATTACK_DESCRIPTIONS[kev.id] || kev.title}`;
 }
 
 // Catalog of all 30 transparent icons
@@ -1476,7 +1542,7 @@ function layoutGraph(snapshot = null) {
     el.className = 'node';
     el.id = 'node-' + node.id;
     el.title = node.vulnerabilityAssigned === false ? 'No exploitable exposure assigned in this simulated infrastructure.' : (node.targetDef.publicExposure && `${node.targetDef.attackTechnique} · ${node.targetDef.attackDescription}\n${node.targetDef.publicExposure}`) || (node.kev
-      ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
+      ? cveTooltip(node.kev)
       : node.targetDef.vulnerabilityChance != null
         ? 'No vulnerability assigned to this control in this infrastructure.'
         : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.');
@@ -1495,6 +1561,7 @@ function layoutGraph(snapshot = null) {
       </div>
     `;
 
+    el.addEventListener('click', () => revealNodeWires(node, 4000));
     nodesLayer.appendChild(el);
     node.el = el;
   });
@@ -1517,6 +1584,18 @@ function createWire(source, target) {
   };
   path.setAttribute('d', `M ${source.x} ${source.y} L ${target.x} ${target.y}`);
   currentWires.push(wire);
+}
+
+// Reveal the selected or scanned object's connections briefly, then fade them.
+function revealNodeWires(node, duration = 1200) {
+  currentWires.filter(wire => wire.source.id === node.id || wire.target.id === node.id).forEach(wire => {
+    const revealId = (wire.revealId || 0) + 1;
+    wire.revealId = revealId;
+    wire.path.classList.add('revealed');
+    safeTimeout(() => {
+      if (wire.revealId === revealId) wire.path.classList.remove('revealed');
+    }, duration);
+  });
 }
 
 function drawAttackEntries(nodes) {
@@ -1562,7 +1641,7 @@ function resetInfraVisuals() {
       node.el.className = 'node';
       node.el.querySelector('.node-label').textContent = node.label;
       node.el.title = node.vulnerabilityAssigned === false ? 'No exploitable exposure assigned in this simulated infrastructure.' : (node.targetDef.publicExposure && `${node.targetDef.attackTechnique} · ${node.targetDef.attackDescription}\n${node.targetDef.publicExposure}`) || (node.kev
-        ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
+        ? cveTooltip(node.kev)
         : node.targetDef.vulnerabilityChance != null
           ? 'No vulnerability assigned to this control in this infrastructure.'
           : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.');
@@ -1635,7 +1714,7 @@ function triggerNodeDefense(node, wire, mitigation) {
     const badgeText = mitigation.badge || 'CONTAINED';
     const targetText = mitigation.badge?.includes('CANARY') ? 'DECOY ACCESS' : node.kev ? node.kev.id : node.targetDef.publicExposure ? `${node.targetDef.attackTechnique} · PUBLIC ACCESS` : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
     const subText = mitigation.control ? `${targetText} · [${mitigation.control}]` : `Mitigated ${targetText}`;
-    node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
+    node.el.setAttribute('title', `${badgeText}\n${node.kev ? cveTooltip(node.kev) + '\n' : ''}${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
       kevEl.innerHTML = `<span class="cve">${badgeText}</span><span class="vuln-title">${subText}</span>`;
@@ -1867,6 +1946,7 @@ function runSimulationOnCurrentInfra() {
     let remaining = batch.length;
     const complete = () => { if (--remaining === 0) safeTimeout(() => playBatch(index + 1), 150); };
     batch.forEach(({ node, wire, mitigation, revisit, probeOnly }) => {
+      revealNodeWires(node);
       const apply = () => {
         if (!revisit && !probeOnly) {
           recordSocTicket(node, mitigation, probeOnly);
