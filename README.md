@@ -4,7 +4,7 @@ An interactive visual demonstration of an attacker moving through an enterprise 
 
 The demo is illustrative: its infrastructure, access paths, alerts and defense outcomes are generated for presentation. They are not observations of a real environment or measurements of a product's effectiveness.
 
-![ARTEX wire diagram demo](assets/wire_simulation_demo.gif)
+![ARTEX wire diagram demo](assets/wire_current_demo.gif)
 
 ## Get and start the demo
 
