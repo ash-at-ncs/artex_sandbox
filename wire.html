@@ -12,7 +12,7 @@
     --turquoise-glow: rgba(0, 240, 255, 0.45);
     --green: #00ff77;
     --green-glow: rgba(0, 255, 119, 0.65);
-    --green-wire: rgba(0, 255, 119, 0.22);
+    --green-wire: rgba(0, 255, 119, 0.48);
     --red: #ff2244;
     --red-glow: rgba(255, 34, 68, 0.85);
     --red-wire: #ff2244;
@@ -142,27 +142,6 @@
     pointer-events: auto;
   }
 
-  #connector-style-btn {
-    position: absolute;
-    top: 20px;
-    left: 12px;
-    z-index: 1001;
-    background: rgba(0, 30, 36, 0.85);
-    border: 1px solid var(--turquoise);
-    border-radius: 4px;
-    color: var(--turquoise);
-    cursor: pointer;
-    font: inherit;
-    font-size: 9px;
-    padding: 4px 6px;
-    white-space: nowrap;
-  }
-
-  #connector-style-btn:focus-visible {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
-  }
-
   #new-run-btn {
     pointer-events: auto;
     background: rgba(0, 30, 36, 0.85);
@@ -277,9 +256,12 @@
     stroke: #ff304f;
     stroke-width: 2.5;
     stroke-linecap: round;
-    stroke-dasharray: 9 6;
+    stroke-dasharray: 3 7;
+    animation: probeFade 0.75s ease-out forwards;
     filter: drop-shadow(0 0 5px rgba(255, 34, 68, 0.75));
   }
+
+  @keyframes probeFade { 0%, 45% { opacity: 1; } 100% { opacity: 0; } }
 
   .attack-entry-head {
     fill: #ff304f;
@@ -287,10 +269,11 @@
   }
 
   .wire.active-wire {
-    stroke: var(--green);
-    stroke-opacity: 0.75;
-    stroke-width: 1.8;
-    filter: drop-shadow(0 0 4px var(--green));
+    stroke: #ff304f;
+    stroke-opacity: 0.95;
+    stroke-width: 2;
+    stroke-dasharray: 3 7;
+    filter: drop-shadow(0 0 4px rgba(255, 34, 68, 0.75));
   }
 
   .wire.hit-wire {
@@ -320,7 +303,8 @@
   /* Smaller, sleek node items */
   .node {
     position: absolute;
-    transform: translate(-50%, -50%);
+    /* Anchor the 36px icon, not the combined icon-and-label box, at x/y. */
+    transform: translate(-50%, -18px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -331,7 +315,8 @@
   }
 
   .node:hover {
-    transform: translate(-50%, -50%) scale(1.15);
+    transform: translate(-50%, -18px) scale(1.15);
+    transform-origin: center 18px;
     z-index: 100;
   }
 
@@ -545,7 +530,7 @@
       </button>
       <button class="mode-btn" data-mode="patch" title="Perimeter virtual patching via Edge WAF">
         <span class="mode-title">02 / VIRTUAL PATCH</span>
-        <span class="mode-desc">Edge WAF · 60% Perimeter Block [SI-2]</span>
+        <span class="mode-desc">Edge WAF · HTTP virtual patches [SI-2]</span>
       </button>
       <button class="mode-btn" data-mode="defender" title="Agentic SOAR zero-trust token containment">
         <span class="mode-title">03 / AGENTIC SOAR</span>
@@ -553,7 +538,7 @@
       </button>
       <button class="mode-btn" data-mode="combined" title="Multi-layered defense-in-depth posture">
         <span class="mode-title">04 / DEFENSE-IN-DEPTH</span>
-        <span class="mode-desc">WAF + Agentic SOC + Canary trigger</span>
+        <span class="mode-desc">WAF + Agentic SOAR + Canary trigger</span>
       </button>
     </div>
 
@@ -566,7 +551,6 @@
     </div>
   </div>
 
-  <button id="connector-style-btn" type="button" aria-pressed="false" title="Toggle curved connectors">CONNECTORS: STRAIGHT</button>
   <a href="index.html" class="back-link" title="Switch back to tabular view">TABLE VIEW ↗ <span style="opacity:0.6;font-size:9px;margin-left:5px;border-left:1px solid rgba(255,255,255,0.2);padding-left:7px;">v2.4.0</span></a>
 
   <!-- Fullscreen SVG for wires & pulses -->
@@ -622,6 +606,9 @@ const LAYER_KEVS = [
   ],
   // Layer 2: Microservices Mesh & Applications (T1059, T1210, T1505)
   [
+    { id: 'CVE-2026-42271', title: 'LiteLLM MCP command execution (valid API key required)', tech: 'T1059' },
+    { id: 'CVE-2023-48788', title: 'FortiClient EMS SQL injection', tech: 'T1190' },
+    { id: 'CVE-2020-0618', title: 'SQL Server Reporting Services RCE', tech: 'T1059' },
     { id: 'CVE-2021-44228', title: 'Log4Shell JNDI Remote Code Execution', tech: 'T1059' },
     { id: 'CVE-2023-22527', title: 'Confluence OGNL Template Injection', tech: 'T1059' },
     { id: 'CVE-2022-22965', title: 'Spring4Shell Data Binding RCE', tech: 'T1190' },
@@ -657,6 +644,11 @@ const LAYER_KEVS = [
  * Maps technical exploit mechanics against WAF (SI-2/SC-7) vs Agentic SOC Mitigation (SI-4/AC-3/IA-5).
  */
 const KEV_MITIGATION_RULES = {
+  // Advisory: exploitation requires a valid LiteLLM proxy API key and affected endpoints.
+  'CVE-2026-42271': {
+    waf: { mitigates: false, reason: 'The internal LiteLLM proxy is not assumed to be covered by the perimeter WAF.' },
+    ml: { mitigates: true, control: 'NIST SI-4', reason: 'Scenario assumption: agentic response detects unexpected subprocess execution by the proxy.' }
+  },
   // Layer 0 - Perimeter & Cloud Ingress
   'CVE-2024-4577': {
     waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'WAF query regex drops %ad PHP CGI argument injection' },
@@ -667,7 +659,7 @@ const KEV_MITIGATION_RULES = {
     ml:  { mitigates: false, reason: 'Perimeter auth bypass occurs before internal ML baseline can flag session' }
   },
   'CVE-2024-3400': {
-    waf: { mitigates: false, reason: 'WAF signature bypassed via encoded session cookie directory traversal' },
+    waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'Simulated targeted virtual patch filters malicious HTTP requests to the GlobalProtect portal when covered.' },
     ml:  { mitigates: false, reason: 'Edge firewall OS injection executes at edge appliance firmware layer' }
   },
   'CVE-2023-3519': {
@@ -816,8 +808,8 @@ const KEV_MITIGATION_RULES = {
 
 // Scenario assumptions, not verified detection performance or deployed controls.
 Object.assign(KEV_MITIGATION_RULES, {
-  'CVE-2018-13379': { waf: { mitigates: false, reason: 'VPN appliance traffic bypasses the application WAF.' }, ml: { mitigates: false, reason: 'The edge appliance is outside internal behavioral monitoring.' } },
-  'CVE-2019-11510': { waf: { mitigates: false, reason: 'The VPN appliance is outside the application WAF.' }, ml: { mitigates: false, reason: 'The edge appliance is outside internal behavioral monitoring.' } },
+  'CVE-2018-13379': { waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'Simulated virtual patch filters malicious requests to the FortiOS SSL VPN web portal when covered.' }, ml: { mitigates: false, reason: 'The edge appliance is outside internal behavioral monitoring.' } },
+  'CVE-2019-11510': { waf: { mitigates: true, control: 'NIST SI-2 / SC-7', reason: 'Simulated virtual patch filters malicious requests to the Pulse web portal when covered.' }, ml: { mitigates: false, reason: 'The edge appliance is outside internal behavioral monitoring.' } },
   'CVE-2021-42013': { waf: { mitigates: true, control: 'NIST SI-2', reason: 'Simulated WAF rule blocks traversal requests.' }, ml: { mitigates: false, reason: 'The edge server is outside internal behavioral monitoring.' } },
   'CVE-2024-29824': { waf: { mitigates: false, reason: 'The EPM core server is on the internal network.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring flags anomalous EPM database activity.' } },
   'CVE-2020-14882': { waf: { mitigates: false, reason: 'The internal WebLogic console is outside the perimeter WAF.' }, ml: { mitigates: true, control: 'NIST SI-4', reason: 'Simulated monitoring flags anomalous console access.' } },
@@ -840,11 +832,51 @@ Object.assign(KEV_MITIGATION_RULES, {
 /**
  * Checks whether a given vulnerability can be addressed by the active mitigation scenario.
  */
+function soarDetects(node) {
+  // A repeatable simulation assumption, not a measured product detection rate.
+  let hash = (2166136261 ^ soarSeed) >>> 0;
+  for (const char of node.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  hash ^= hash >>> 16; hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15; hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296 < SOAR_DETECTION_RATE;
+}
+
+function wafPortalCovered(node) {
+  let hash = (0x9e3779b9 ^ soarSeed) >>> 0;
+  for (const char of node.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  hash ^= hash >>> 16; hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15; hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296 < WAF_PORTAL_COVERAGE;
+}
+
+function edgeSoarDetects(node) {
+  let hash = (0x85ebca6b ^ soarSeed) >>> 0;
+  for (const char of node.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  hash ^= hash >>> 16; hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15; hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296 < EDGE_SOAR_DETECTION_RATE;
+}
+
 function checkVulnMitigation(vulnId, mode, node) {
+  if (node.vulnerabilityAssigned === false) {
+    return { addressed: true, noAssignedVulnerability: true, badge: 'NO FINDING', reason: 'No exploitable exposure was assigned to this asset in this infrastructure.' };
+  }
+  if (node.targetDef?.publicExposure) {
+    if ((mode === 'defender' || mode === 'combined') && soarDetects(node)) {
+      return { addressed: true, badge: 'CONTAINED · AGENTIC SOAR', control: 'NIST AC-3 / SI-4', reason: 'Simulation assumption: SOAR detects and closes the public exposure.' };
+    }
+    return { addressed: false, badge: 'PUBLIC EXPOSURE', reason: node.targetDef.publicExposure };
+  }
   if (node.targetDef?.vulnerabilityChance != null && !vulnId) {
     return { addressed: true, noAssignedVulnerability: true, badge: 'NO ASSIGNED CVE', reason: 'This control has no modeled vulnerability in this infrastructure; the attack cannot exploit it.' };
   }
   if (!vulnId) {
+    if (node.layerIdx > 0 && (mode === 'defender' || mode === 'combined') && soarDetects(node)) {
+      return { addressed: true, badge: 'CONTAINED · AGENTIC SOAR', control: 'NIST SI-4 / AC-3', reason: 'Simulation assumption: SOAR detects anomalous use of compromised credentials and revokes access.' };
+    }
     return { addressed: false, badge: 'T1078 · VALID ACCOUNTS', reason: 'Simulated technique: the attacker uses assumed compromised account credentials to access this asset. No CVE is mapped.' };
   }
   if (mode === 'baseline') {
@@ -860,6 +892,15 @@ function checkVulnMitigation(vulnId, mode, node) {
     ml:  { mitigates: node.layerIdx >= 1, control: 'NIST SI-4', reason: 'Internal anomaly detection' }
   };
   const isNonHttpProtocol = ['aws-vpn', 'az-net', 'az-branch', 'partner-gw'].includes(node.groupId);
+  // These web portals may or may not be behind an inline WAF in each generated
+  // infrastructure. This models coverage, not a measured protection rate.
+  const portalIds = ['forti-vpn', 'pulse-vpn', 'pan-globalprotect'];
+  const portalCovered = !portalIds.includes(node.groupId) || wafPortalCovered(node);
+  const wafMitigates = !isNonHttpProtocol && portalCovered && rule.waf?.mitigates;
+  // SOAR can also receive telemetry from monitored perimeter web portals.
+  // The modeled sensor shares the same inline placement as the WAF.
+  const edgeSoarMitigates = node.layerIdx === 0 && (!portalIds.includes(node.groupId) || portalCovered) && edgeSoarDetects(node);
+  const soarMitigates = edgeSoarMitigates || (rule.ml?.mitigates && soarDetects(node));
 
   if (mode === 'patch') {
     // WAF only inspects HTTP/HTTPS traffic: completely blind to VPNs, SD-WAN, and private peered links
@@ -871,7 +912,7 @@ function checkVulnMitigation(vulnId, mode, node) {
       };
     }
 
-    if (!isNonHttpProtocol && rule.waf && rule.waf.mitigates) {
+    if (wafMitigates) {
       return {
         addressed: true,
         badge: 'SHIELDED · WAF VIRTUAL PATCH',
@@ -882,29 +923,29 @@ function checkVulnMitigation(vulnId, mode, node) {
     return {
       addressed: false,
       badge: 'WAF BYPASS',
-      reason: rule.waf ? rule.waf.reason : 'Vulnerability unaddressed by perimeter WAF'
+      reason: !portalCovered ? 'Simulated public portal is not behind the inline WAF.' : (rule.waf ? rule.waf.reason : 'Vulnerability unaddressed by perimeter WAF')
     };
   }
 
   if (mode === 'defender') {
-    if (rule.ml && rule.ml.mitigates) {
+    if (soarMitigates) {
       return {
         addressed: true,
-        badge: 'CONTAINED · AGENTIC SOC MITIGATION',
+        badge: 'CONTAINED · AGENTIC SOAR',
         control: rule.ml.control,
-        reason: rule.ml.reason
+        reason: edgeSoarMitigates ? 'Simulation assumption: SOAR detects anomalous activity using monitored portal telemetry.' : rule.ml.reason
       };
     }
     return {
       addressed: false,
       badge: 'ML MISSED',
-      reason: rule.ml ? rule.ml.reason : 'Activity does not trigger behavioral threshold'
+      reason: rule.ml?.mitigates ? 'Simulated SOAR detection missed this attack.' : (rule.ml?.reason || 'Activity does not trigger the simulated detection rule')
     };
   }
 
   if (mode === 'combined') {
     // Defense-in-depth: WAF + ML + Honeytokens
-    if (!isNonHttpProtocol && rule.waf && rule.waf.mitigates) {
+    if (wafMitigates) {
       return {
         addressed: true,
         badge: 'SHIELDED · WAF VIRTUAL PATCH',
@@ -912,18 +953,18 @@ function checkVulnMitigation(vulnId, mode, node) {
         reason: rule.waf.reason
       };
     }
-    if (rule.ml && rule.ml.mitigates) {
+    if (soarMitigates) {
       return {
         addressed: true,
-        badge: 'CONTAINED · AGENTIC SOC MITIGATION',
+        badge: 'CONTAINED · AGENTIC SOAR',
         control: rule.ml.control,
-        reason: rule.ml.reason
+        reason: edgeSoarMitigates ? 'Simulation assumption: SOAR detects anomalous activity using monitored portal telemetry.' : rule.ml.reason
       };
     }
     return {
       addressed: false,
       badge: 'UNADDRESSED',
-      reason: 'Exploit mechanism evaded both WAF and behavioral detection'
+      reason: 'The attack bypassed the simulated WAF rule and SOAR detection.'
     };
   }
 
@@ -939,9 +980,7 @@ const LAYER_CONFIG = [
       {
         name: 'AWS Cloud Perimeter',
         targets: [
-          { id: 'aws-cloud', icon: 'public-cloud.png', variants: ['AWS Account: Prod', 'AWS Account: Staging', 'AWS Account: Core'] },
-          { id: 'aws-infra', icon: 'cloud-infrastructure.png', variants: ['AWS Infra VPC', 'AWS EKS Cluster'] },
-          { id: 'aws-vpn', icon: 'remote-access.png', variants: ['AWS Client VPN Gateway'] },
+          { id: 'public-s3', icon: 'data.png', attackTechnique: 'T1530', attackDescription: 'Data from Cloud Storage', publicExposure: 'Simulated S3 bucket permits anonymous public read; the contents are not assumed to contain credentials.', variants: ['Amazon S3 · Bucket'] },
           { id: 'ivanti-connect', icon: 'remote-access.png', kevByVariant: ['CVE-2023-46805'], variants: ['Ivanti Connect Secure VPN'] },
           { id: 'f5-gateway', icon: 'network.png', kevByVariant: ['CVE-2022-1388'], variants: ['F5 BIG-IP Management Interface'] },
           { id: 'forti-vpn', icon: 'remote-access.png', kevByVariant: ['CVE-2018-13379'], variants: ['FortiOS SSL VPN'] }
@@ -950,9 +989,7 @@ const LAYER_CONFIG = [
       {
         name: 'Azure Enterprise',
         targets: [
-          { id: 'az-cloud', icon: 'public-cloud.png', variants: ['Azure Subscription: Corp', 'Azure Subscription: Ops', 'Azure Subscription: Dev'] },
-          { id: 'az-net', icon: 'network.png', variants: ['ExpressRoute Backbone', 'Transit VNet Link'] },
-          { id: 'az-branch', icon: 'branch.png', variants: ['Branch SD-WAN Gateway', 'Campus Edge Gateway'] },
+          { id: 'public-blob', icon: 'data.png', attackTechnique: 'T1530', attackDescription: 'Data from Cloud Storage', publicExposure: 'Simulated Azure Blob container permits anonymous public read; the contents are not assumed to contain credentials.', variants: ['Azure Blob Storage · Container'] },
           { id: 'pan-globalprotect', icon: 'network.png', kevByVariant: ['CVE-2024-3400'], variants: ['PAN-OS GlobalProtect Gateway'] },
           { id: 'pulse-vpn', icon: 'remote-access.png', kevByVariant: ['CVE-2019-11510'], variants: ['Pulse Connect Secure VPN'] }
         ]
@@ -960,9 +997,8 @@ const LAYER_CONFIG = [
       {
         name: 'GCP & Partners',
         targets: [
-          { id: 'gcp-infra', icon: 'cloud-infrastructure.png', variants: ['GCP Compute Project', 'GCP Kubernetes Mesh'] },
-          { id: 'partner-gw', icon: 'partners.png', variants: ['B2B Partner Link 01', 'B2B Partner Link 02'] },
-          { id: 'ext-surface', icon: 'attack-surface.png', variants: ['External Attack Surface'] },
+          { id: 'public-gitlab', icon: 'code.png', attackTechnique: 'T1593.003', attackDescription: 'Search public code repositories', publicExposure: 'Simulated GitLab project is publicly readable contrary to its intended access policy; no leaked secret is assumed.', variants: ['GitLab · Project'] },
+          { id: 'public-bitbucket', icon: 'code.png', attackTechnique: 'T1593.003', attackDescription: 'Search public code repositories', publicExposure: 'Simulated Bitbucket repository is publicly readable contrary to its intended access policy; no leaked secret is assumed.', variants: ['Bitbucket · Repository'] },
           { id: 'citrix-adc', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-3519'], variants: ['Citrix NetScaler ADC Gateway'] },
           { id: 'apache-edge', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2021-42013'], variants: ['Apache HTTP Server 2.4.50 Edge'] }
         ]
@@ -987,7 +1023,7 @@ const LAYER_CONFIG = [
         name: 'Identity & Access',
         targets: [
           { id: 'iam-idp', icon: 'identity.png', productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2022-22954', 'CVE-2018-8340', 'CVE-2021-3827', null], variants: ['VMware Workspace ONE Access IdP', 'Microsoft AD FS IdP', 'Red Hat Keycloak IdP', 'Okta Identity Cloud'] },
-          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['Vault Secrets Store'] },
+          { id: 'vault-creds', icon: 'configuration.png', isSecurity: true, variants: ['HashiCorp Vault Secrets Server'] },
           { id: 'sentry-auth', icon: 'endpoint.png', kevByVariant: ['CVE-2023-38035', 'CVE-2023-38035'], variants: ['Ivanti Sentry GW 01', 'Ivanti Sentry GW 02'] },
           { id: 'ad-identity', icon: 'identity.png', kevByVariant: ['CVE-2022-26923'], variants: ['Active Directory Domain Controller'] },
           { id: 'ivanti-epm', icon: 'endpoint.png', kevByVariant: ['CVE-2024-29824'], variants: ['Ivanti Endpoint Manager Core'] }
@@ -996,8 +1032,7 @@ const LAYER_CONFIG = [
       {
         name: 'Boundary Controls',
         targets: [
-          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-32707', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'], variants: ['Splunk Enterprise Detection', 'IBM QRadar SIEM Detection', 'Elastic Security / Kibana', 'Wazuh Server Detection'] },
-          { id: 'soc-sensor', icon: 'soc.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-32707', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'], variants: ['Splunk Enterprise SOC', 'IBM QRadar SIEM SOC', 'Elastic Security SOC', 'Wazuh Server SOC'] }
+          { id: 'threat-det', icon: 'threat-detection.png', isSecurity: true, productPool: true, vulnerabilityChance: 0.25, kevByVariant: ['CVE-2023-32707', 'CVE-2020-4888', 'CVE-2026-78597', 'CVE-2026-25769'], variants: ['Splunk Enterprise', 'IBM QRadar SIEM', 'Elastic Security / Kibana', 'Wazuh Server'] }
         ]
       }
     ]
@@ -1022,14 +1057,16 @@ const LAYER_CONFIG = [
           { id: 'log4j-svc', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2021-44228', 'CVE-2021-44228'], variants: ['Service using Log4j 2 #01', 'Service using Log4j 2 #02'] },
           { id: 'spring-svc', icon: 'application.png', kevByVariant: ['CVE-2022-22965', 'CVE-2022-22965'], variants: ['Spring MVC WAR (Tomcat / JDK 9+) A', 'Spring MVC WAR (Tomcat / JDK 9+) B'] },
           { id: 'confluence-node', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-22527'], variants: ['Internal Confluence Data Center'] },
-          { id: 'confluence-admin', icon: 'application.png', kevByVariant: ['CVE-2023-22515'], variants: ['Confluence Server (Legacy)'] },
-          { id: 'weblogic', icon: 'application.png', kevByVariant: ['CVE-2020-14882'], variants: ['Oracle WebLogic Admin Console'] }
+          { id: 'confluence-admin', icon: 'application.png', kevByVariant: ['CVE-2023-22515'], variants: ['Confluence Server 8.5.1'] },
+          { id: 'weblogic', icon: 'application.png', kevByVariant: ['CVE-2020-14882'], variants: ['Oracle WebLogic Admin Console'] },
+          { id: 'sql-reporting', icon: 'application.png', kevByVariant: ['CVE-2020-0618'], variants: ['SQL Server Reporting Services'] },
+          { id: 'forti-ems', icon: 'server-infrastructure.png', kevByVariant: ['CVE-2023-48788'], variants: ['FortiClient EMS Server'] }
         ]
       },
       {
         name: 'AI & Operations',
         targets: [
-          { id: 'ai-core', icon: 'ai.png', variants: ['Predictive AI Core'] },
+          { id: 'ai-core', icon: 'ai.png', kevByVariant: ['CVE-2026-42271'], variants: ['LiteLLM Proxy 1.83.6 · API key assumed'] },
           { id: 'iot-hub', icon: 'iot.png', kevByVariant: ['CVE-2021-44228'], variants: ['IoT Ingestion using Log4j 2'] },
           { id: 'vuln-scan', icon: 'vulnerability-management.png', isSecurity: true, kevByVariant: ['CVE-2022-46169'], variants: ['Cacti Network Monitoring Server'] }
         ]
@@ -1071,14 +1108,9 @@ const LAYER_CONFIG = [
             isDb: true, 
             variants: ['MongoDB Cluster (DocStore · Mobile App Team)', 'Redis Cache Cluster (In-Memory · Session Ops)', 'Cassandra DB (Streaming · Event Team)'] 
           },
+          { id: 'litellm-db', icon: 'server-infrastructure.png', isDb: true, variants: ['LiteLLM PostgreSQL Database'] },
+          { id: 'mssql-db', icon: 'server-infrastructure.png', isDb: true, variants: ['Microsoft SQL Server Database'] },
           { id: 'redis-debian', icon: 'server-infrastructure.png', isDb: true, kevByVariant: ['CVE-2022-0543'], variants: ['Debian Redis Session Cache'] },
-          { id: 'sql-reporting', icon: 'data.png', isDb: true, kevByVariant: ['CVE-2020-0618'], variants: ['SQL Server Reporting Services'] },
-          { id: 'forti-ems', icon: 'server-infrastructure.png', isDb: true, kevByVariant: ['CVE-2023-48788'], variants: ['FortiClient EMS (SQL Backend)'] },
-          { 
-            id: 'dc-vault', 
-            icon: 'data-center.png', 
-            variants: ['Core SAN Storage Vault (Storage Admin Team)', 'HashiCorp Vault Store (SecOps Secrets Team)']
-          }
         ]
       }
     ]
@@ -1090,55 +1122,55 @@ const LAYER_CONFIG = [
 // Accounts, telemetry, monitoring, and other context-only assets have no
 // attack-path wire unless an explicit service relationship is modeled here.
 const ALLOWED_CONNECTIONS = {
-  'aws-infra': ['cust-api', 'waf-proxy'],
-  'aws-vpn': ['sentry-auth'],
-  'ivanti-connect': ['cust-api', 'iam-idp', 'soc-sensor'],
-  'f5-gateway': ['cust-api', 'wso2-api'],
-  'forti-vpn': ['sentry-auth', 'ivanti-epm', 'iam-idp'],
-  'pulse-vpn': ['sentry-auth', 'ivanti-epm', 'soc-sensor'],
-  'apache-edge': ['cust-api', 'exchange', 'threat-det'],
-  'az-net': ['cust-api', 'waf-proxy'],
-  'az-branch': ['sentry-auth'],
-  'pan-globalprotect': ['cust-api', 'iam-idp', 'threat-det'],
-  'gcp-infra': ['cust-api', 'partner-api'],
-  'partner-gw': ['partner-api'],
-  'ext-surface': ['waf-proxy'],
+  // Illustrative application and administration relationships, not discovered topology.
+  'ivanti-connect': ['cust-api', 'iam-idp'],
+  'f5-gateway': ['cust-api', 'partner-api', 'waf-proxy', 'wso2-api'],
+  'forti-vpn': ['sentry-auth', 'ivanti-epm', 'iam-idp', 'ad-identity', 'vault-creds', 'threat-det'],
+  'pulse-vpn': ['sentry-auth', 'ivanti-epm'],
+  'apache-edge': ['cust-api', 'exchange'],
+  'pan-globalprotect': ['cust-api', 'iam-idp'],
   'citrix-adc': ['wso2-api'],
-  'cust-api': ['app-engine', 'spring-svc', 'iot-hub', 'activemq'],
+  'cust-api': ['app-engine', 'spring-svc', 'iot-hub', 'ai-core', 'log4j-svc', 'activemq'],
   'partner-api': ['app-engine', 'iot-hub', 'moveit-sftp'],
   'waf-proxy': ['app-engine', 'spring-svc', 'confluence-node'],
-  'iam-idp': ['app-engine', 'spring-svc', 'cicd-runner'],
-  'soc-sensor': ['vuln-scan', 'cicd-runner'],
-  'threat-det': ['vuln-scan', 'cicd-runner'],
-  'wso2-api': ['app-engine', 'spring-svc', 'moveit-sftp', 'activemq'],
-  'sentry-auth': ['app-engine', 'spring-svc', 'cicd-runner', 'vuln-scan'],
+  'iam-idp': ['app-engine', 'spring-svc', 'cicd-runner', 'comp-registry'],
+  'wso2-api': ['app-engine', 'spring-svc', 'moveit-sftp', 'ai-core'],
+  'sentry-auth': ['app-engine', 'spring-svc', 'forti-ems', 'sql-reporting'],
   'exchange': ['confluence-admin'],
-  'ivanti-epm': ['vuln-scan', 'weblogic'],
+  'ivanti-epm': ['forti-ems', 'weblogic', 'vuln-scan'],
   'app-engine': ['lake-cust', 'db-rds', 'nosql-doc', 'redis-debian'],
   'moveit-sftp': ['lake-cust'],
+  'confluence-node': ['mssql-db'],
+  'confluence-admin': ['mssql-db'],
   'spring-svc': ['db-rds', 'nosql-doc'],
   'iot-hub': ['lake-ops', 'nosql-doc'],
+  'ai-core': ['litellm-db'],
   'activemq': ['nosql-doc', 'redis-debian'],
-  'cicd-runner': ['db-rds', 'sql-reporting'],
-  'confluence-admin': ['sql-reporting'],
-  'weblogic': ['sql-reporting', 'forti-ems'],
-  'vuln-scan': ['lake-ops', 'forti-ems']
+  'cicd-runner': ['db-rds'],
+  'sql-reporting': ['mssql-db'],
+  'forti-ems': ['mssql-db'],
+  'weblogic': ['db-rds']
 };
 
 // Only these explicitly internet-facing gateways are eligible as entry points.
-const EXTERNAL_ENTRY_GROUPS = new Set(['ivanti-connect', 'pan-globalprotect', 'citrix-adc', 'f5-gateway', 'forti-vpn', 'pulse-vpn', 'apache-edge']);
+const EXTERNAL_ENTRY_GROUPS = new Set(['ivanti-connect', 'pan-globalprotect', 'citrix-adc', 'f5-gateway', 'forti-vpn', 'pulse-vpn', 'apache-edge', 'public-s3', 'public-blob', 'public-gitlab', 'public-bitbucket']);
 
+const ASSET_EXPOSURE_CHANCE = [0.80, 0.80, 0.80, 0.80]; // Synthetic, per asset; selected once per infrastructure.
+const WAF_PORTAL_COVERAGE = 0.66; // Fraction of modeled public web portals behind a virtual-patching WAF.
+const EDGE_SOAR_DETECTION_RATE = 0.975; // Synthetic detection where portal telemetry is available.
+const SOAR_DETECTION_RATE = 0.32; // Synthetic per-eligible-node detection, calibrated across layouts.
+let soarSeed = 0;
 let currentNodes = [];
 let currentWires = [];
 let savedAttackOrigins = [];
 let attackChoices = new Map();
 let simulationGeneration = 0;
-const INFRA_STORAGE_KEY = 'artex-wire-infrastructure-v1';
+const INFRA_STORAGE_KEY = 'artex-wire-infrastructure-v5';
 let savedInfra = null;
 let activeTimeouts = [];
 let isSimulating = false;
 let runCount = 0;
-let runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
+let runStats = { hits: 0, blocks: 0, lakesBreached: 0, publicExposures: 0, wafBlocks: 0, soarBlocks: 0, canaryBlocks: 0 };
 let inFlightOperations = 0;
 let layerHits = [0, 0, 0, 0];
 let currentMode = 'baseline';
@@ -1273,7 +1305,7 @@ function layoutGraph(snapshot = null) {
 
           // Only explicit per-variant product mappings are eligible. Versions and
           // vulnerable configurations are assumed for this synthetic scenario.
-          const vulnerabilityAssigned = targetDef.vulnerabilityChance == null || Math.random() < targetDef.vulnerabilityChance;
+          const vulnerabilityAssigned = Math.random() < (targetDef.vulnerabilityChance ?? ASSET_EXPOSURE_CHANCE[layerIdx]);
           const kevId = vulnerabilityAssigned ? (targetDef.kevByVariant || [])[vIdx] : null;
           const kev = kevId ? LAYER_KEVS[layerIdx].find(k => k.id === kevId) : null;
           if (kevId && !kev) throw new Error(`Unknown CVE ${kevId} for ${targetDef.id}`);
@@ -1328,16 +1360,30 @@ function layoutGraph(snapshot = null) {
   });
   }
 
+  // Retain only externally reachable assets. Publicly exposed repositories and
+  // buckets can be terminal entry points; never invent a credential link.
+  const reachable = new Set(currentNodes.filter(node => EXTERNAL_ENTRY_GROUPS.has(node.groupId)).map(node => node.id));
+  for (let layer = 0; layer < LAYER_CONFIG.length; layer++) {
+    currentWires.forEach(wire => { if (reachable.has(wire.source.id)) reachable.add(wire.target.id); });
+  }
+  currentWires = currentWires.filter(wire => {
+    if (reachable.has(wire.source.id) && reachable.has(wire.target.id)) return true;
+    wire.path.remove();
+    return false;
+  });
+  currentNodes = currentNodes.filter(node => reachable.has(node.id));
+  currentNodes.forEach(node => { node.downstream = node.downstream.filter(id => reachable.has(id)); });
+
   // Render DOM Nodes with smaller icons
   currentNodes.forEach(node => {
     const el = document.createElement('div');
     el.className = 'node';
     el.id = 'node-' + node.id;
-    el.title = node.kev
+    el.title = node.vulnerabilityAssigned === false ? 'No exploitable exposure assigned in this simulated infrastructure.' : (node.targetDef.publicExposure && `${node.targetDef.attackTechnique} · ${node.targetDef.attackDescription}\n${node.targetDef.publicExposure}`) || (node.kev
       ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
       : node.targetDef.vulnerabilityChance != null
         ? 'No vulnerability assigned to this control in this infrastructure.'
-        : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
+        : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.');
     el.style.left = `${node.x}px`;
     el.style.top = `${node.y}px`;
 
@@ -1348,8 +1394,8 @@ function layoutGraph(snapshot = null) {
       </div>
       <div class="node-label">${node.label}</div>
       <div class="node-kev">
-        <span class="cve">${node.kev ? node.kev.id : 'T1078 · VALID ACCOUNTS'}</span>
-        <span class="vuln-title">${node.kev ? node.kev.title : 'Assumed compromised credentials'}</span>
+        <span class="cve">${node.kev ? node.kev.id : node.targetDef.publicExposure ? node.targetDef.attackTechnique : 'T1078 · VALID ACCOUNTS'}</span>
+        <span class="vuln-title">${node.kev ? node.kev.title : node.targetDef.publicExposure ? `${node.targetDef.attackDescription} · public access misconfiguration` : 'Assumed compromised credentials'}</span>
       </div>
     `;
 
@@ -1366,35 +1412,18 @@ function layoutGraph(snapshot = null) {
   window.currentWires = currentWires;
 }
 
-let curvedConnectors = false;
-
-function updateWirePath(wire) {
-  const { source, target, curve } = wire;
-  const d = curvedConnectors
-    ? `M ${source.x} ${source.y} C ${curve.p1x} ${curve.p1y}, ${curve.p2x} ${curve.p2y}, ${target.x} ${target.y}`
-    : `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
-  wire.path.setAttribute('d', d);
-}
-
 function createWire(source, target) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('class', 'wire');
   svg.appendChild(path);
-  const dx = target.x - source.x;
   const wire = {
     source,
     target,
     path,
-    curve: {
-      p1x: source.x + dx * 0.5 + rand(-15, 15),
-      p1y: source.y + rand(-10, 10),
-      p2x: source.x + dx * 0.5 + rand(-15, 15),
-      p2y: target.y + rand(-10, 10)
-    },
     hit: false,
     defended: false
   };
-  updateWirePath(wire);
+  path.setAttribute('d', `M ${source.x} ${source.y} L ${target.x} ${target.y}`);
   currentWires.push(wire);
 }
 
@@ -1420,6 +1449,9 @@ function resetInfraVisuals() {
   simulationGeneration++;
   clearAllActiveTimeouts();
 
+  // Remove transient external probes from a previous run.
+  svg.querySelectorAll('.attack-entry, .attack-entry-head').forEach(el => el.remove());
+
   // Remove active wire packets and impact bursts
   const packets = svg.querySelectorAll('.wire-packet');
   packets.forEach(p => p.remove());
@@ -1433,16 +1465,16 @@ function resetInfraVisuals() {
     node.defended = false;
     if (node.el) {
       node.el.className = 'node';
-      node.el.title = node.kev
+      node.el.title = node.vulnerabilityAssigned === false ? 'No exploitable exposure assigned in this simulated infrastructure.' : (node.targetDef.publicExposure && `${node.targetDef.attackTechnique} · ${node.targetDef.attackDescription}\n${node.targetDef.publicExposure}`) || (node.kev
         ? 'Simulated CVE mapping: an affected version and configuration are assumed.'
         : node.targetDef.vulnerabilityChance != null
           ? 'No vulnerability assigned to this control in this infrastructure.'
-          : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.';
+          : 'Simulated MITRE ATT&CK T1078: the attacker uses assumed compromised account credentials. No CVE is assigned.');
       const kevEl = node.el.querySelector('.node-kev');
       if (kevEl) {
         kevEl.innerHTML = `
-          <span class="cve">${node.kev ? node.kev.id : 'T1078 · VALID ACCOUNTS'}</span>
-          <span class="vuln-title">${node.kev ? node.kev.title : 'Assumed compromised credentials'}</span>
+          <span class="cve">${node.kev ? node.kev.id : node.targetDef.publicExposure ? node.targetDef.attackTechnique : 'T1078 · VALID ACCOUNTS'}</span>
+          <span class="vuln-title">${node.kev ? node.kev.title : node.targetDef.publicExposure ? `${node.targetDef.attackDescription} · public access misconfiguration` : 'Assumed compromised credentials'}</span>
         `;
       }
     }
@@ -1455,7 +1487,7 @@ function resetInfraVisuals() {
     wire.path.setAttribute('class', 'wire');
   });
 
-  runStats = { hits: 0, blocks: 0, lakesBreached: 0 };
+  runStats = { hits: 0, blocks: 0, lakesBreached: 0, publicExposures: 0, wafBlocks: 0, soarBlocks: 0, canaryBlocks: 0 };
   inFlightOperations = 0;
   layerHits = [0, 0, 0, 0];
   isSimulating = false;
@@ -1464,7 +1496,8 @@ function resetInfraVisuals() {
 function triggerNodeHit(node, isExfil = false) {
   if (node.hit || node.defended) return;
   node.hit = true;
-  runStats.hits++;
+  if (node.targetDef.publicExposure) runStats.publicExposures++;
+  else runStats.hits++;
 
   const activeKev = node.kev;
 
@@ -1478,8 +1511,8 @@ function triggerNodeHit(node, isExfil = false) {
     const kevEl = node.el.querySelector('.node-kev');
     if (kevEl) {
       kevEl.innerHTML = `
-        <span class="cve">${activeKev ? activeKev.id : 'T1078 · VALID ACCOUNTS'}</span>
-        <span class="vuln-title">${activeKev ? activeKev.title : 'Assumed compromised credentials'}</span>
+        <span class="cve">${activeKev ? activeKev.id : node.targetDef.publicExposure ? node.targetDef.attackTechnique : 'T1078 · VALID ACCOUNTS'}</span>
+        <span class="vuln-title">${activeKev ? activeKev.title : node.targetDef.publicExposure ? `${node.targetDef.attackDescription} · public access misconfiguration` : 'Assumed compromised credentials'}</span>
       `;
     }
 
@@ -1497,11 +1530,14 @@ function triggerNodeDefense(node, wire, mitigation) {
   node.defended = true;
   if (mitigation.noAssignedVulnerability) return;
   runStats.blocks++;
+  if (mitigation.badge?.includes('WAF VIRTUAL PATCH')) runStats.wafBlocks++;
+  else if (mitigation.badge?.includes('AGENTIC SOAR')) runStats.soarBlocks++;
+  else if (mitigation.badge?.includes('CANARY')) runStats.canaryBlocks++;
 
   if (node.el) {
     node.el.classList.add('defended');
     const badgeText = mitigation.badge || 'CONTAINED';
-    const targetText = node.kev ? node.kev.id : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
+    const targetText = node.kev ? node.kev.id : node.targetDef.publicExposure ? `${node.targetDef.attackTechnique} · PUBLIC ACCESS` : mitigation.noAssignedVulnerability ? 'NO EXPLOIT MODELED' : 'T1078 · VALID ACCOUNTS';
     const subText = mitigation.control ? `${targetText} · [${mitigation.control}]` : `Mitigated ${targetText}`;
     node.el.setAttribute('title', `${badgeText}\n${mitigation.reason || ''}`);
     const kevEl = node.el.querySelector('.node-kev');
@@ -1550,38 +1586,70 @@ function animateWirePulse(wire, onComplete) {
   requestAnimationFrame(step);
 }
 
+function hasBaselineDataPath() {
+  // Use the same probe order and three-hit cap as the baseline, without
+  // revealing which assets are vulnerable when paths are prioritized.
+  function hasTopologyPath(node) {
+    return node.layerIdx === 3 || (attackChoices.get(node.id) || []).some(wire => hasTopologyPath(wire.target));
+  }
+  const reached = [[], [], [], []];
+  const seen = new Set();
+  function visit(node) {
+    if (seen.has(node.id) || checkVulnMitigation(node.kev && node.kev.id, 'baseline', node).addressed) return;
+    if (reached[node.layerIdx].length >= 3) return;
+    seen.add(node.id);
+    reached[node.layerIdx].push(node);
+  }
+  const starts = savedAttackOrigins.map(id => currentNodes.find(node => node.id === id)).filter(Boolean);
+  starts.sort((a, b) => Number(hasTopologyPath(b)) - Number(hasTopologyPath(a))).forEach(visit);
+  for (let layer = 0; layer < 3; layer++) {
+    reached[layer].sort((a, b) => Number(hasTopologyPath(b)) - Number(hasTopologyPath(a))).forEach(source => {
+      [...(attackChoices.get(source.id) || [])].sort((a, b) => Number(hasTopologyPath(b.target)) - Number(hasTopologyPath(a.target))).forEach(wire => visit(wire.target));
+    });
+  }
+  return reached[3].length > 0;
+}
+
 /**
  * Builds a fresh randomized infrastructure topology and runs the simulation.
  */
 function generateNewInfra() {
   clearAllActiveTimeouts();
-  layoutGraph();
-
-  // Select 1-2 persistent ingress entry points for this infrastructure topology
-  const ingressNodes = currentNodes.filter(n => EXTERNAL_ENTRY_GROUPS.has(n.groupId) && n.downstream.length > 0);
-  const startCount = randInt(1, 2);
-  const origins = shuffle(ingressNodes).slice(0, startCount);
-  savedAttackOrigins = origins.map(n => n.id);
-  attackChoices = new Map(currentNodes.map(node => [node.id,
-    shuffle(currentWires.filter(wire => wire.source.id === node.id)).slice(0, randInt(1, 2))
-  ]));
+  soarSeed = Math.floor(Math.random() * 4294967296);
+  // Generate a meaningful demonstration: resample independent exposures until
+  // at least one existing attack path reaches a data target in baseline.
+  let attempts = 0;
+  do {
+    layoutGraph();
+    savedAttackOrigins = shuffle(currentNodes.filter(node => EXTERNAL_ENTRY_GROUPS.has(node.groupId))).map(node => node.id);
+    attackChoices = new Map(currentNodes.map(node => [node.id,
+      shuffle(currentWires.filter(wire => wire.source.id === node.id))
+    ]));
+    attempts++;
+  } while (!hasBaselineDataPath() && attempts < 100);
+  if (!hasBaselineDataPath()) throw new Error('Unable to generate a baseline path to a data target');
   const h = window.innerHeight;
   const graphTop = Math.min(h * 0.4, document.querySelector('.top-bar').getBoundingClientRect().bottom + 65);
   const graphHeight = Math.max(graphTop + 1, h - 65) - graphTop;
   savedInfra = {
+    soarSeed,
     nodes: currentNodes.map(({ el, x, y, downstream, hit, defended, ...node }) => ({ ...node, x: x / window.innerWidth, y: (y - graphTop) / graphHeight })),
     wires: currentWires.map(wire => [wire.source.id, wire.target.id]),
     origins: savedAttackOrigins,
     choices: Array.from(attackChoices, ([id, wires]) => [id, wires.map(wire => wire.target.id)])
   };
   try { localStorage.setItem(INFRA_STORAGE_KEY, JSON.stringify(savedInfra)); } catch (error) { console.warn('Unable to save infrastructure', error); }
-  drawAttackEntries(origins);
-
   runSimulationOnCurrentInfra();
 }
 
 function restoreInfra(snapshot) {
   if (!snapshot || !Array.isArray(snapshot.nodes) || !Array.isArray(snapshot.wires) || !Array.isArray(snapshot.origins) || !Array.isArray(snapshot.choices)) throw new Error('Invalid saved infrastructure');
+  // Keep the same per-node detection outcomes when scenarios are compared.
+  if (!Number.isInteger(snapshot.soarSeed)) {
+    snapshot.soarSeed = Math.floor(Math.random() * 4294967296);
+    try { localStorage.setItem(INFRA_STORAGE_KEY, JSON.stringify(snapshot)); } catch (error) { console.warn('Unable to save simulation seed', error); }
+  }
+  soarSeed = snapshot.soarSeed;
   // Refresh catalog metadata on previously saved nodes without changing topology.
   snapshot.nodes.forEach(node => {
     const definition = LAYER_CONFIG[node.layerIdx]?.clusters.flatMap(cluster => cluster.targets).find(target => target.id === node.groupId);
@@ -1597,12 +1665,18 @@ function restoreInfra(snapshot) {
   });
   clearAllActiveTimeouts();
   layoutGraph(snapshot);
-  savedAttackOrigins = snapshot.origins;
+  // Upgrade older saved infrastructure without changing its nodes or connections.
+  savedAttackOrigins = [...snapshot.origins, ...currentNodes
+    .filter(node => EXTERNAL_ENTRY_GROUPS.has(node.groupId) && !snapshot.origins.includes(node.id))
+    .map(node => node.id)];
   attackChoices = new Map(snapshot.choices.map(([id, targets]) => [id,
     targets.map(target => currentWires.find(wire => wire.source.id === id && wire.target.id === target)).filter(Boolean)
   ]));
+  currentNodes.forEach(node => {
+    const choices = attackChoices.get(node.id) || [];
+    attackChoices.set(node.id, [...choices, ...currentWires.filter(wire => wire.source.id === node.id && !choices.includes(wire))]);
+  });
   savedInfra = snapshot;
-  drawAttackEntries(savedAttackOrigins.map(id => currentNodes.find(node => node.id === id)).filter(Boolean));
   runSimulationOnCurrentInfra();
 }
 
@@ -1626,20 +1700,20 @@ function runSimulationOnCurrentInfra() {
 
   // Build the complete result synchronously in a stable order. Animation cannot
   // affect the outcome, and all scenarios use the same chosen attack paths.
-  // Model one canary on a reachable layer 3 or 4 target. Half of combined
-  // runs send one existing attack chain past earlier controls to that canary.
-  // Other chains continue to use the normal mitigation rules.
+  // Place at most one canary on a route that can pass the same WAF and SOAR
+  // rules used by all other attacks. A canary is triggered in half of eligible runs.
   function findCanaryPath(node, path = []) {
-    if (node.targetDef?.vulnerabilityChance != null && !node.kev) return null;
+    if (checkVulnMitigation(node.kev && node.kev.id, 'baseline', node).addressed) return null;
     const nextPath = [...path, node];
     if (node.layerIdx === 3) return nextPath;
+    if (checkVulnMitigation(node.kev && node.kev.id, 'combined', node).addressed) return null;
     const preferred = attackChoices.get(node.id) || [];
     const candidates = [...preferred, ...currentWires.filter(wire => wire.source.id === node.id && !preferred.includes(wire))];
     for (const wire of candidates) {
       const found = findCanaryPath(wire.target, nextPath);
       if (found) return found;
     }
-    return node.layerIdx === 2 ? nextPath : null;
+    return node.layerIdx === 2 && !checkVulnMitigation(node.kev && node.kev.id, 'combined', node).addressed ? nextPath : null;
   }
   const viablePath = startNodes.map(node => findCanaryPath(node)).find(Boolean);
   // Keep this route in the shared attack choices for every scenario.
@@ -1651,76 +1725,98 @@ function runSimulationOnCurrentInfra() {
   const canaryPath = currentMode === 'combined' && Math.random() < 0.5 ? viablePath : null;
   const canaryTarget = canaryPath?.[canaryPath.length - 1];
   const canaryApproach = new Set((canaryPath || []).slice(0, -1).map(node => node.id));
-  const queue = [...startNodes].sort((a, b) => Number(canaryApproach.has(b.id)) - Number(canaryApproach.has(a.id))).map(node => ({ node, wire: null }));
+  // Check every perimeter object first, then advance layer by layer. Keep
+  // probes on real connections: baseline permits at most three hits per
+  // layer; defended scenarios permit at most one backend data target hit.
+  function hasRouteToData(node) {
+    if (node.layerIdx === 3) return true;
+    return (attackChoices.get(node.id) || []).some(wire => hasRouteToData(wire.target));
+  }
+  function priority(node) {
+    return (canaryApproach.has(node.id) || node === canaryTarget ? 2 : 0) + (hasRouteToData(node) ? 1 : 0);
+  }
+  const orderedStarts = [...startNodes].sort((a, b) => priority(b) - priority(a));
   const visited = new Map();
-  const hitsByLayer = [0, 0, 0, 0];
-  const drawnWires = new Set();
-  const events = [];
-  while (queue.length) {
-    const { node, wire } = queue.shift();
-    if (wire && drawnWires.has(wire)) continue;
-    if (visited.has(node.id)) {
-      // Show paths that converge on a target already reached or blocked.
-      if (wire) {
-        drawnWires.add(wire);
-        events.push({ node, wire, mitigation: visited.get(node.id), revisit: true });
+  const reached = [[], [], [], []];
+  const batches = [];
+  let dataReached = false;
+
+  function planBatch(probes) {
+    const events = [];
+    for (const { node, wire } of probes) {
+      if (visited.has(node.id)) {
+        if (wire) events.push({ node, wire, mitigation: visited.get(node.id), revisit: true });
+        continue;
       }
-      continue;
+      let mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
+      if (node === canaryTarget) {
+        mitigation = { addressed: true, badge: 'BLOCKED · CANARY TRIGGER', control: 'NIST SI-4', reason: 'The simulated attack chain reached the canary and was blocked.' };
+      }
+      const hitLimit = currentMode === 'baseline' ? 3 : node.layerIdx === 3 ? 1 : Infinity;
+      if (!mitigation.addressed && reached[node.layerIdx].length >= hitLimit) {
+        events.push({ node, wire, mitigation, probeOnly: true });
+        continue;
+      }
+      visited.set(node.id, mitigation);
+      events.push({ node, wire, mitigation });
+      if (node.layerIdx === 3 && !mitigation.noAssignedVulnerability) dataReached = true;
+      if (!mitigation.addressed) reached[node.layerIdx].push(node);
     }
-    let mitigation = checkVulnMitigation(node.kev && node.kev.id, currentMode, node);
-    if (node === canaryTarget) {
-      mitigation = { addressed: true, badge: 'BLOCKED · CANARY TRIGGER', control: 'NIST SI-4', reason: 'The simulated attack chain reached the canary and was blocked.' };
-    } else if (canaryApproach.has(node.id)) {
-      mitigation = { addressed: false, badge: 'DEFENSE BYPASSED', reason: 'This simulated attack chain bypassed earlier defenses before reaching the canary.' };
-    }
-    if (!mitigation.addressed && !canaryApproach.has(node.id) && hitsByLayer[node.layerIdx] >= 3) {
-      // Rejoin a compromised target only through an existing connection from
-      // this source. Never invent a link just to satisfy the display cap.
-      const rejoin = wire && currentWires.find(candidate =>
-        candidate.source.id === wire.source.id && !drawnWires.has(candidate) &&
-        visited.has(candidate.target.id) && !visited.get(candidate.target.id).addressed
-      );
-      if (rejoin) queue.push({ node: rejoin.target, wire: rejoin });
-      continue;
-    }
-    visited.set(node.id, mitigation);
-    if (wire) drawnWires.add(wire);
-    events.push({ node, wire, mitigation });
-    if (!mitigation.addressed) {
-      hitsByLayer[node.layerIdx]++;
-      [...(attackChoices.get(node.id) || [])].sort((a, b) => Number(canaryApproach.has(b.target.id) || b.target === canaryTarget) - Number(canaryApproach.has(a.target.id) || a.target === canaryTarget)).forEach(next => queue.push({ node: next.target, wire: next }));
+    if (events.length) batches.push(events);
+  }
+
+  for (let i = 0; i < orderedStarts.length; i += 3) {
+    planBatch(orderedStarts.slice(i, i + 3).map(node => ({ node, wire: null })));
+  }
+  for (let layer = 0; layer < 3; layer++) {
+    const sources = [...reached[layer]].sort((a, b) => priority(b) - priority(a));
+    for (const source of sources) {
+      const wires = [...(attackChoices.get(source.id) || [])].sort((a, b) => priority(b.target) - priority(a.target));
+      for (let i = 0; i < wires.length; i += 3) {
+        planBatch(wires.slice(i, i + 3).map(wire => ({ node: wire.target, wire })));
+      }
     }
   }
 
-  function playEvent(index) {
-    if (index >= events.length) { finalizeSimulation(); return; }
-    const { node, wire, mitigation, revisit } = events[index];
-    const apply = () => {
-      if (mitigation.addressed) {
-        if (revisit && !mitigation.noAssignedVulnerability) { wire.defended = true; wire.path.classList.add('defended-wire'); }
-        else triggerNodeDefense(node, wire, mitigation);
-      }
-      else {
-        if (wire) { wire.hit = true; wire.path.classList.add('hit-wire'); }
-        if (!revisit) {
-          triggerNodeHit(node, node.layerIdx === 3);
-          if (!node.kev && wire && node.el) {
-            const explanation = `Assumed credential reuse from ${wire.source.label} to ${node.label} (MITRE ATT&CK T1078). The simulation does not model how the credentials were obtained or created.`;
-            node.el.title = explanation;
-            const detail = node.el.querySelector('.node-kev .vuln-title');
-            if (detail) detail.textContent = `Assumed credentials from ${wire.source.label}`;
+  function playBatch(index) {
+    if (index >= batches.length) { finalizeSimulation(dataReached); return; }
+    const batch = batches[index];
+    let remaining = batch.length;
+    const complete = () => { if (--remaining === 0) safeTimeout(() => playBatch(index + 1), 150); };
+    batch.forEach(({ node, wire, mitigation, revisit, probeOnly }) => {
+      const apply = () => {
+        if (probeOnly) { complete(); return; }
+        if (mitigation.addressed) {
+          if (revisit && !mitigation.noAssignedVulnerability) { wire.defended = true; wire.path.classList.add('defended-wire'); }
+          else if (!revisit) triggerNodeDefense(node, wire, mitigation);
+        } else {
+          if (wire) { wire.hit = true; wire.path.classList.add('hit-wire'); }
+          if (!revisit) {
+            triggerNodeHit(node, node.layerIdx === 3);
+            if (!node.kev && !node.targetDef.publicExposure && wire && node.el) {
+              node.el.title = `Assumed credential reuse from ${wire.source.label} to ${node.label} (MITRE ATT&CK T1078).`;
+              const detail = node.el.querySelector('.node-kev .vuln-title');
+              if (detail) detail.textContent = `Assumed credentials from ${wire.source.label}`;
+            }
           }
         }
+        complete();
+      };
+      if (wire) animateWirePulse(wire, apply);
+      else {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        line.setAttribute('class', 'attack-entry');
+        line.setAttribute('d', `M -20 ${node.y} L ${Math.max(8, node.x - 24)} ${node.y}`);
+        svg.appendChild(line);
+        safeTimeout(() => line.remove(), 750);
+        safeTimeout(apply, 650);
       }
-      safeTimeout(() => playEvent(index + 1), 120);
-    };
-    if (wire) animateWirePulse(wire, apply);
-    else safeTimeout(apply, 220);
+    });
   }
-  playEvent(0);
+  playBatch(0);
 }
 
-function finalizeSimulation() {
+function finalizeSimulation(dataReached = false) {
   isSimulating = false;
   window.isSimulating = false;
   window.runStats = runStats;
@@ -1730,7 +1826,12 @@ function finalizeSimulation() {
     runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · DATA TARGET REACHED`;
   } else {
     runHud.className = 'contained';
-    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · DATA TARGET NOT REACHED`;
+    runHud.textContent = `[${scn.tag}] RUN #${String(runCount).padStart(2, '0')} · ${runStats.hits} NODES COMPROMISED · ${runStats.blocks} CONTAINED · ${dataReached ? 'DATA LAYER REACHED · BLOCKED' : 'DATA LAYER NOT REACHED'}`;
+  }
+
+  if (runStats.publicExposures) runHud.textContent += ` · ${runStats.publicExposures} PUBLIC EXPOSURES`;
+  if (currentMode === 'combined') {
+    runHud.textContent += ` · WAF ${runStats.wafBlocks} / SOAR ${runStats.soarBlocks} / CANARY ${runStats.canaryBlocks}`;
   }
 
   if (window._onSimulationDone) {
@@ -1739,6 +1840,10 @@ function finalizeSimulation() {
       scenario: currentMode,
       hits: runStats.hits,
       blocks: runStats.blocks,
+      publicExposures: runStats.publicExposures,
+      wafBlocks: runStats.wafBlocks,
+      soarBlocks: runStats.soarBlocks,
+      canaryBlocks: runStats.canaryBlocks,
       lakesBreached: runStats.lakesBreached,
       status: runStats.lakesBreached > 0 ? 'BREACHED' : 'CONTAINED'
     });
@@ -1746,18 +1851,6 @@ function finalizeSimulation() {
 }
 
 // Bind 4 mode scenario buttons: tests the SAME infrastructure with SAME vulns
-const connectorStyleBtn = document.getElementById('connector-style-btn');
-function updateConnectorButton() {
-  connectorStyleBtn.setAttribute('aria-pressed', String(curvedConnectors));
-  connectorStyleBtn.textContent = `CONNECTORS: ${curvedConnectors ? 'CURVED' : 'STRAIGHT'}`;
-}
-connectorStyleBtn.addEventListener('click', () => {
-  curvedConnectors = !curvedConnectors;
-  updateConnectorButton();
-  try { localStorage.setItem('artex-wire-connectors', curvedConnectors ? 'curved' : 'straight'); } catch (error) { console.warn('Unable to save connector style', error); }
-  currentWires.forEach(updateWirePath);
-});
-
 const modeButtons = document.querySelectorAll('.mode-btn');
 modeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1779,8 +1872,6 @@ window.addEventListener('resize', () => {
 
 window.addEventListener('load', () => {
   try {
-    curvedConnectors = localStorage.getItem('artex-wire-connectors') === 'curved';
-    updateConnectorButton();
     const mode = localStorage.getItem('artex-wire-mode');
     if (mode && DEFENSE_SCENARIOS[mode]) {
       currentMode = mode;

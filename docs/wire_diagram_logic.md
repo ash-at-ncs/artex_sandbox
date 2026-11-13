@@ -121,3 +121,19 @@ has credentials or integration access to its respective data target. A wire
 represents that assumed reachability, not proof that exploitation automatically
 grants the next hop. The simulation does not model credentials, network rules,
 or exploit prerequisites in detail.
+
+
+### AI gateway scenario
+
+The simulated LiteLLM Proxy 1.83.6 is associated with CVE-2026-42271. The scenario assumes the attacker has a valid proxy API key and can reach the affected MCP test endpoints. The vendor identifies versions 1.74.2 through 1.83.6 as affected and 1.83.7 as fixed. The connection to a PostgreSQL database is an illustrative deployment relationship, not a claim about a real environment.
+
+Source: https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g
+
+The Confluence Server 8.5.1 example is within the affected version range for CVE-2023-22515: https://support.atlassian.com/atlassian-knowledge-base/kb/faq-for-cve-2023-22515/
+
+
+### Exposure assignment and scenario calibration
+
+Each infrastructure assigns independent simulated exposures to asset instances: 80% by default, or the asset's explicit vulnerability chance where specified. The assignment, topology, and defense seed persist when changing scenarios. Public access and assumed credentials are scenario findings, not invented CVEs. The generator resamples an infrastructure if the actual baseline probe order cannot reach a data target; the baseline probe order does not use hidden exposure assignments. The combined scenario prioritizes a viable canary route when the canary is selected, without bypassing earlier defenses.
+
+Baseline displays at most three successful targets in each layer and at least one data target. Defended scenarios show at most one backend data target hit. A blocked or unexploitable node cannot be used as a stepping stone; agents continue checking other modeled connections. The synthetic WAF coverage and SOAR detection parameters are calibrated across generated infrastructures to approximately 50% of runs with a backend hit for each individual defense, and 25% for defense-in-depth. These are demo assumptions, not measured security product performance.
