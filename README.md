@@ -6,17 +6,26 @@ The demo is illustrative: its infrastructure, access paths, alerts and defense o
 
 ![ARTEX wire diagram demo](assets/wire_simulation_demo.gif)
 
-## Start the demo
+## Get and start the demo
 
-From this directory:
+Clone the current repository:
 
-- **Windows:** double-click `start.bat`, or run `start.bat` in a terminal.
-- **macOS or Linux:** run `./start.sh`.
-- **Python:** run `python start.py`.
+```powershell
+git clone https://github.com/ash-at-ncs/artex_sandbox.git
+cd artex_sandbox
+```
 
-The launcher opens the wire diagram at [http://localhost:8080/wire.html](http://localhost:8080/wire.html). Keep the terminal open while using the demo; press **Ctrl+C** to stop the server. The launcher opens the existing service on port 8080 if that port is already in use.
+On Windows, install Python 3 and make sure `python` or the Python launcher `py` is available on your PATH. Then double-click **`start.bat`** in the repository folder, or run it from PowerShell:
 
-A separate [tabular view](http://localhost:8080/index.html) is also available through the **Table View** link.
+```powershell
+.\start.bat
+```
+
+The batch file runs `start.py`, which starts a local HTTP server and opens [http://localhost:8080/wire.html](http://localhost:8080/wire.html) in your browser. Keep the launcher window open while using the demo; press **Ctrl+C** in that window to stop it.
+
+If port 8080 is already in use, the launcher opens the existing service at that address rather than starting another server. If neither `python` nor `py` is available, `start.bat` attempts to open that address but does not start a server.
+
+On macOS or Linux, run `./start.sh` from the repository folder; it looks for `python3` and then `python`. A separate [tabular view](http://localhost:8080/index.html) is also available through the **Table View** link.
 
 ## Run the wire diagram
 
