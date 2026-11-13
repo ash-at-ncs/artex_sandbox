@@ -1907,6 +1907,10 @@ function runSimulationOnCurrentInfra() {
 }
 
 function finalizeSimulation(dataReached = false) {
+  if (!socLooping) {
+    socLooping = true;
+    renderSocTickets();
+  }
   isSimulating = false;
   window.isSimulating = false;
   window.runStats = runStats;
